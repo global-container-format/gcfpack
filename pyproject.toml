@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gcfpack"
+description = "GCF file packer."
+version = "1.0.0"
+readme = "README.md"
+license = {file = "LICENSE"}
+authors = [{ name = "Alfredo Mungo" }]
+keywords = ["gcf", "global", "container", "game", "format", "texture", "generic"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Topic :: Multimedia"
+]
+
+[tool.isort]
+profile = "black"
+skip_gitignore = true
+line_length = 120
+use_parentheses = true
+atomic = true
+
+[tool.pylint]
+max-line-length = 120
+
+[tool.black]
+line-length = 120
+
+[tool.sphinx]
+extensions = ["sphinx.ext.autodoc", "sphinx.ext.viewcode"]
+templates_path = ['_templates']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+
+
+# -- Options for HTML output -------------------------------------------------
+# https://www.sphinx-doc.org/en/master/usage/configuration.html#options-for-html-output
+
+html_theme = 'haiku'
+html_static_path = ['_static']
+nitpicky = true
