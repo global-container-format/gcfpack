@@ -1,25 +1,21 @@
 """GCF file packaging."""
 
 import os
-
 from functools import reduce
 from typing import Iterable, cast
 
-from gcf import Resource, ResourceDescriptor, ResourceType, ContainerFlags, Header, SupercompressionScheme, VkFormat
+from gcf import ContainerFlags, Header, Resource, ResourceType, SupercompressionScheme, VkFormat
 from gcf import blob as gcf_blob
-from gcf import image as gcf_image
 from gcf import compress
+from gcf import image as gcf_image
 
-
-from .meta import (
-    GcfFlagValue as RawContainerFlags,
-    SuperCompressionScheme as RawSupercompressionScheme,
-    Resource as RawResource,
-    Metadata as RawGcfDescription,
-    ImageResource as RawImageResource,
-    BlobResource as RawBlobResource,
-    ImageMipLevel as RawImageMipLevel
-)
+from .meta import BlobResource as RawBlobResource
+from .meta import GcfFlagValue as RawContainerFlags
+from .meta import ImageMipLevel as RawImageMipLevel
+from .meta import ImageResource as RawImageResource
+from .meta import Metadata as RawGcfDescription
+from .meta import Resource as RawResource
+from .meta import SuperCompressionScheme as RawSupercompressionScheme
 
 
 def deserialize_container_flags(raw: Iterable[RawContainerFlags]) -> ContainerFlags:
@@ -41,11 +37,14 @@ def deserialize_supercompression_scheme(raw: RawSupercompressionScheme) -> Super
 
     if raw == "none":
         return SupercompressionScheme.NO_COMPRESSION
-    elif raw == "deflate":
+
+    if raw == "deflate":
         return SupercompressionScheme.DEFLATE
-    elif raw == "test":
+
+    if raw == "test":
         return SupercompressionScheme.TEST
-    elif raw == "zlib":
+
+    if raw == "zlib":
         return SupercompressionScheme.ZLIB
 
     raise ValueError("Invalid supercompression scheme", raw)
@@ -58,7 +57,8 @@ def get_resource_type(res: RawResource) -> ResourceType:
 
     if res_type == "blob":
         return ResourceType.BLOB
-    elif res_type == "image":
+
+    if res_type == "image":
         return ResourceType.IMAGE
 
     raise ValueError("Invalid resource type.", res_type)
@@ -70,11 +70,7 @@ def create_header(desc: RawGcfDescription) -> Header:
     raw_header = desc["header"]
     gcf_version = raw_header["version"]
 
-    return Header(
-        len(desc["resources"]),
-        deserialize_container_flags(desc["header"]["flags"]),
-        gcf_version
-    )
+    return Header(len(desc["resources"]), deserialize_container_flags(desc["header"]["flags"]), gcf_version)
 
 
 def get_file_size(path: str) -> int:
@@ -92,11 +88,7 @@ def get_image_resource_size(raw_image: RawImageResource) -> int:
     for level in mip_levels:
         layers = level["layers"]
 
-        size += reduce(
-            lambda a, b: sum((a, b)),
-            map(get_file_size, layers),
-            0
-        )
+        size += reduce(lambda a, b: sum((a, b)), map(get_file_size, layers), 0)
 
     return size
 
@@ -105,7 +97,9 @@ def create_image_mip_level(
     supercompression_scheme: SupercompressionScheme,
     level: RawImageMipLevel,
 ) -> gcf_image.MipLevel:
-    uncompressed_data: bytes = b''
+    """Create an image mip level from its description."""
+
+    uncompressed_data: bytes = b""
 
     for layer in level["layers"]:
         with open(layer, "rb") as layer_file:
@@ -114,11 +108,7 @@ def create_image_mip_level(
     compressed_data = compress_data(uncompressed_data, supercompression_scheme)
 
     descriptor = gcf_image.MipLevelDescriptor(
-        len(compressed_data),
-        len(uncompressed_data),
-        level["row_stride"],
-        level["depth_stride"],
-        level["layer_stride"]
+        len(compressed_data), len(uncompressed_data), level["row_stride"], level["depth_stride"], level["layer_stride"]
     )
 
     return gcf_image.MipLevel(descriptor, compressed_data)
@@ -131,15 +121,10 @@ def create_image_resource(header: Header, raw: RawResource) -> Resource:
     raw_mip_levels = image_resource["mip_levels"]
     supercompression_scheme = deserialize_supercompression_scheme(image_resource["super_compression_scheme"])
 
-    mip_levels = map(
-        lambda level: create_image_mip_level(supercompression_scheme, level),
-        raw_mip_levels
-    )
+    mip_levels = map(lambda level: create_image_mip_level(supercompression_scheme, level), raw_mip_levels)
 
     uncompressed_size = reduce(
-        lambda a, b: sum((a, b)),
-        map(lambda level: level.descriptor.uncompressed_size, mip_levels),
-        0
+        lambda a, b: sum((a, b)), map(lambda level: level.descriptor.uncompressed_size, mip_levels), 0
     )
 
     descriptor = gcf_image.ImageResourceDescriptor(
@@ -151,7 +136,7 @@ def create_image_resource(header: Header, raw: RawResource) -> Resource:
         depth=image_resource["depth"],
         layer_count=len(raw_mip_levels[0]["layers"]),
         mip_level_count=len(raw_mip_levels),
-        supercompression_scheme=supercompression_scheme
+        supercompression_scheme=supercompression_scheme,
     )
 
     return gcf_image.ImageResource(descriptor, mip_levels)
@@ -182,7 +167,7 @@ def create_blob_resource(header: Header, raw: RawResource) -> Resource:
         compressed_size,
         header=header,
         uncompressed_size=uncompressed_size,
-        supercompression_scheme=supercompression_scheme
+        supercompression_scheme=supercompression_scheme,
     )
 
     return gcf_blob.BlobResource(descriptor, data)
@@ -194,14 +179,9 @@ def create_resource(header: Header, raw: RawResource) -> Resource:
     res_type = get_resource_type(raw)
 
     if res_type == ResourceType.BLOB:
-        return create_blob_resource(
-            header,
-            cast(RawBlobResource, raw)
-        )
-    elif res_type == ResourceType.IMAGE:
-        return create_image_resource(
-            header,
-            cast(RawImageResource, raw)
-        )
+        return create_blob_resource(header, cast(RawBlobResource, raw))
+
+    if res_type == ResourceType.IMAGE:
+        return create_image_resource(header, cast(RawImageResource, raw))
 
     raise ValueError("Unsupported resource type.", res_type)
