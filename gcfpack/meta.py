@@ -23,7 +23,6 @@ class BaseResource(TypedDict):
     """The base class for all resources in a description object."""
 
     format: int
-    size: int
     super_compression_scheme: SuperCompressionScheme
 
 
@@ -31,14 +30,12 @@ class BlobResource(BaseResource):
     """A blob resource representation."""
 
     type: Literal["blob"]
-    uncompressed_size: int
+    file_path: str
 
 
 class ImageMipLevel(TypedDict):
     """An image mip level representation."""
 
-    compressed_size: NotRequired[int]
-    uncompressed_size: int
     row_stride: int
     depth_stride: int
     layer_stride: int
@@ -72,7 +69,7 @@ def create_sample_metadata_object() -> Metadata:
     :return: An example description object to simplify manual description creation.
     """
 
-    blob_resource_example = cast(BlobResource, {"type": "blob", "uncompressed_size": 12345})
+    blob_resource_example = cast(BlobResource, {"type": "blob", "file_path": "my-file.bin"})
 
     image_resource_example = cast(
         ImageResource,
@@ -84,8 +81,6 @@ def create_sample_metadata_object() -> Metadata:
             "flags": ["image2d"],
             "mip_levels": [
                 {
-                    "compressed_size": 100,
-                    "uncompressed_size": 200,
                     "row_stride": 10,
                     "depth_stride": 200,
                     "layer_stride": 200,
@@ -120,7 +115,7 @@ def validate_metadata(meta: Any):
         :param meta: The description object to validate.
     """
 
-    return False
+    return True
 
 
 def load_metadata(description_file: TextIO) -> Metadata:

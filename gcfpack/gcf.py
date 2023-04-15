@@ -1,0 +1,207 @@
+"""GCF file packaging."""
+
+import os
+
+from functools import reduce
+from typing import Iterable, cast
+
+from gcf import Resource, ResourceDescriptor, ResourceType, ContainerFlags, Header, SupercompressionScheme, VkFormat
+from gcf import blob as gcf_blob
+from gcf import image as gcf_image
+from gcf import compress
+
+
+from .meta import (
+    GcfFlagValue as RawContainerFlags,
+    SuperCompressionScheme as RawSupercompressionScheme,
+    Resource as RawResource,
+    Metadata as RawGcfDescription,
+    ImageResource as RawImageResource,
+    BlobResource as RawBlobResource,
+    ImageMipLevel as RawImageMipLevel
+)
+
+
+def deserialize_container_flags(raw: Iterable[RawContainerFlags]) -> ContainerFlags:
+    """Deserialize a sequence of container flags."""
+
+    result: ContainerFlags = ContainerFlags(0)
+
+    for flag in raw:
+        if flag == "unpadded":
+            result |= ContainerFlags.UNPADDED
+        else:
+            raise ValueError("Invalid container flag.", flag)
+
+    return result
+
+
+def deserialize_supercompression_scheme(raw: RawSupercompressionScheme) -> SupercompressionScheme:
+    """Deserialize a supercompression scheme value."""
+
+    if raw == "none":
+        return SupercompressionScheme.NO_COMPRESSION
+    elif raw == "deflate":
+        return SupercompressionScheme.DEFLATE
+    elif raw == "test":
+        return SupercompressionScheme.TEST
+    elif raw == "zlib":
+        return SupercompressionScheme.ZLIB
+
+    raise ValueError("Invalid supercompression scheme", raw)
+
+
+def get_resource_type(res: RawResource) -> ResourceType:
+    """Get the resource type from a raw resource."""
+
+    res_type = res["type"]
+
+    if res_type == "blob":
+        return ResourceType.BLOB
+    elif res_type == "image":
+        return ResourceType.IMAGE
+
+    raise ValueError("Invalid resource type.", res_type)
+
+
+def create_header(desc: RawGcfDescription) -> Header:
+    """Create a GCF header from its raw description."""
+
+    raw_header = desc["header"]
+    gcf_version = raw_header["version"]
+
+    return Header(
+        len(desc["resources"]),
+        deserialize_container_flags(desc["header"]["flags"]),
+        gcf_version
+    )
+
+
+def get_file_size(path: str) -> int:
+    """Get the size in bytes of a file, given its path."""
+
+    return os.stat(path).st_size
+
+
+def get_image_resource_size(raw_image: RawImageResource) -> int:
+    """Get the total size in bytes of an image resource data."""
+
+    size = 0
+    mip_levels = raw_image["mip_levels"]
+
+    for level in mip_levels:
+        layers = level["layers"]
+
+        size += reduce(
+            lambda a, b: sum((a, b)),
+            map(get_file_size, layers),
+            0
+        )
+
+    return size
+
+
+def create_image_mip_level(
+    supercompression_scheme: SupercompressionScheme,
+    level: RawImageMipLevel,
+) -> gcf_image.MipLevel:
+    uncompressed_data: bytes = b''
+
+    for layer in level["layers"]:
+        with open(layer, "rb") as layer_file:
+            uncompressed_data += layer_file.read()
+
+    compressed_data = compress_data(uncompressed_data, supercompression_scheme)
+
+    descriptor = gcf_image.MipLevelDescriptor(
+        len(compressed_data),
+        len(uncompressed_data),
+        level["row_stride"],
+        level["depth_stride"],
+        level["layer_stride"]
+    )
+
+    return gcf_image.MipLevel(descriptor, compressed_data)
+
+
+def create_image_resource(header: Header, raw: RawResource) -> Resource:
+    """Create a image resource from its raw description."""
+
+    image_resource = cast(RawImageResource, raw)
+    raw_mip_levels = image_resource["mip_levels"]
+    supercompression_scheme = deserialize_supercompression_scheme(image_resource["super_compression_scheme"])
+
+    mip_levels = map(
+        lambda level: create_image_mip_level(supercompression_scheme, level),
+        raw_mip_levels
+    )
+
+    uncompressed_size = reduce(
+        lambda a, b: sum((a, b)),
+        map(lambda level: level.descriptor.uncompressed_size, mip_levels),
+        0
+    )
+
+    descriptor = gcf_image.ImageResourceDescriptor(
+        VkFormat(image_resource["format"]),
+        uncompressed_size,
+        header=header,
+        width=image_resource["width"],
+        height=image_resource["height"],
+        depth=image_resource["depth"],
+        layer_count=len(raw_mip_levels[0]["layers"]),
+        mip_level_count=len(raw_mip_levels),
+        supercompression_scheme=supercompression_scheme
+    )
+
+    return gcf_image.ImageResource(descriptor, mip_levels)
+
+
+def compress_data(data: bytes, scheme: SupercompressionScheme) -> bytes:
+    """Compress GCF data with one of the supported schemes."""
+
+    compressor = compress.COMPRESSOR_TABLE[scheme][0]
+
+    return compressor(data)
+
+
+def create_blob_resource(header: Header, raw: RawResource) -> Resource:
+    """Create a blob resource from its raw description."""
+
+    blob_resource = cast(RawBlobResource, raw)
+    supercompression_scheme = deserialize_supercompression_scheme(blob_resource["super_compression_scheme"])
+
+    with open(blob_resource["file_path"], "rb") as blob_file:
+        data = blob_file.read()
+
+    uncompressed_size = len(data)
+    compressed_data = compress_data(data, supercompression_scheme)
+    compressed_size = len(compressed_data)
+
+    descriptor = gcf_blob.BlobResourceDescriptor(
+        compressed_size,
+        header=header,
+        uncompressed_size=uncompressed_size,
+        supercompression_scheme=supercompression_scheme
+    )
+
+    return gcf_blob.BlobResource(descriptor, data)
+
+
+def create_resource(header: Header, raw: RawResource) -> Resource:
+    """Create a resource from its raw description."""
+
+    res_type = get_resource_type(raw)
+
+    if res_type == ResourceType.BLOB:
+        return create_blob_resource(
+            header,
+            cast(RawBlobResource, raw)
+        )
+    elif res_type == ResourceType.IMAGE:
+        return create_image_resource(
+            header,
+            cast(RawImageResource, raw)
+        )
+
+    raise ValueError("Unsupported resource type.", res_type)
