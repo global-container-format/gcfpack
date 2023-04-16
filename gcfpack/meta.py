@@ -5,6 +5,7 @@ GCF metadata (aka description) files.
 """
 
 import json
+from functools import reduce
 from typing import Any, List, Literal, NotRequired, TextIO, TypedDict, Union, cast
 
 import pydantic
@@ -79,6 +80,7 @@ def create_sample_metadata_object() -> Metadata:
         ImageResource,
         {
             "type": "image",
+            "format": 9,
             "width": 100,
             "height": 100,
             "depth": 1,
@@ -111,7 +113,29 @@ def store_metadata(out_file: TextIO, meta: Metadata):
     json.dump(meta, out_file, indent=4)
 
 
-def validate_metadata(meta: Any):
+def validate_image_metadata(res: ImageResource):
+    """Validate image metadata.
+
+    The metadata is assumed to be already matching
+    the general resource structure.
+
+    This function will raise a `ValueError` if the provided
+    description object is not a valid image resource.
+    """
+
+    image_types = ("image1d", "image2d", "image3d")
+    res_image_type_count = reduce(lambda total, flag: total + int(flag in image_types), res["flags"], 0)
+
+    if res_image_type_count != 1:
+        raise ValueError(
+            f"Image resources must have exactly one image dimension flag. Found {res_image_type_count}.", res
+        )
+
+    if not "format" in res:
+        raise ValueError("Image resources must have an associated format number.", res)
+
+
+def validate_metadata(maybe_meta: Any):
     """Validate a description object.
 
     This function will raise a `ValueError` if the provided
@@ -119,11 +143,17 @@ def validate_metadata(meta: Any):
 
         :param meta: The description object to validate.
     """
-    model = pydantic.create_model_from_typeddict(Metadata)
-    validation_errors = pydantic.validate_model(model, meta)[2]  # pylint: disable=no-member
+    meta_model = pydantic.create_model_from_typeddict(Metadata)
+    validation_errors = pydantic.validate_model(meta_model, maybe_meta)[2]  # pylint: disable=no-member
 
     if validation_errors:
         raise ValueError("Invalid GCF description.", validation_errors)
+
+    meta = cast(Metadata, maybe_meta)
+
+    for res in meta["resources"]:
+        if res["type"] == "image":
+            validate_image_metadata(res)
 
 
 def load_metadata(description_file: TextIO) -> Metadata:

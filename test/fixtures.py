@@ -33,6 +33,7 @@ def raw_image_resource():
         "depth": 1,
         "flags": ["image2d"],
         "supercompression_scheme": "none",
+        "format": 9,
         "mip_levels": [
             {
                 "row_stride": 10,
