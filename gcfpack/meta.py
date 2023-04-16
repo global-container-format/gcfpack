@@ -120,7 +120,7 @@ def validate_metadata(meta: Any):
         :param meta: The description object to validate.
     """
     model = pydantic.create_model_from_typeddict(Metadata)
-    validation_errors = pydantic.validate_model(model, meta)[2]
+    validation_errors = pydantic.validate_model(model, meta)[2]  # pylint: disable=no-member
 
     if validation_errors:
         raise ValueError("Invalid GCF description.", validation_errors)

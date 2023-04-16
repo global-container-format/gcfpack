@@ -1,6 +1,5 @@
 """GCF file packaging."""
 
-import os
 from functools import reduce
 from typing import Iterable, Tuple, cast
 
@@ -70,27 +69,7 @@ def create_header(desc: RawGcfDescription) -> Header:
     raw_header = desc["header"]
     gcf_version = raw_header["version"]
 
-    return Header(len(desc["resources"]), deserialize_container_flags(desc["header"]["flags"]), gcf_version)
-
-
-def get_file_size(path: str) -> int:
-    """Get the size in bytes of a file, given its path."""
-
-    return os.stat(path).st_size
-
-
-def get_image_resource_size(raw_image: RawImageResource) -> int:
-    """Get the total size in bytes of an image resource data."""
-
-    size = 0
-    mip_levels = raw_image["mip_levels"]
-
-    for level in mip_levels:
-        layers = level["layers"]
-
-        size += reduce(lambda a, b: sum((a, b)), map(get_file_size, layers), 0)
-
-    return size
+    return Header(len(desc["resources"]), deserialize_container_flags(desc["header"].get("flags", [])), gcf_version)
 
 
 def create_image_mip_level(
@@ -121,7 +100,7 @@ def create_image_resource(header: Header, raw: RawResource) -> Resource:
     raw_mip_levels = image_resource["mip_levels"]
     supercompression_scheme = deserialize_supercompression_scheme(image_resource["supercompression_scheme"])
 
-    mip_levels = map(lambda level: create_image_mip_level(supercompression_scheme, level), raw_mip_levels)
+    mip_levels = tuple(map(lambda level: create_image_mip_level(supercompression_scheme, level), raw_mip_levels))
 
     uncompressed_size = reduce(
         lambda a, b: sum((a, b)), map(lambda level: level.descriptor.uncompressed_size, mip_levels), 0
