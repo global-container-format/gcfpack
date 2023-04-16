@@ -5,6 +5,7 @@ name = "pypi"
 
 [packages]
 click = "*"
+pydantic = "*"
 
 [dev-packages]
 sphinx = "*"
@@ -16,6 +17,7 @@ mypy = "*"
 pytest = "*"
 pytest-coverage = "*"
 toml = "*"
+pydantic = "*"
 
 [requires]
 python_version = "3"

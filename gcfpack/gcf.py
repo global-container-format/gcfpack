@@ -119,7 +119,7 @@ def create_image_resource(header: Header, raw: RawResource) -> Resource:
 
     image_resource = cast(RawImageResource, raw)
     raw_mip_levels = image_resource["mip_levels"]
-    supercompression_scheme = deserialize_supercompression_scheme(image_resource["super_compression_scheme"])
+    supercompression_scheme = deserialize_supercompression_scheme(image_resource["supercompression_scheme"])
 
     mip_levels = map(lambda level: create_image_mip_level(supercompression_scheme, level), raw_mip_levels)
 
@@ -154,7 +154,7 @@ def create_blob_resource(header: Header, raw: RawResource) -> Resource:
     """Create a blob resource from its raw description."""
 
     blob_resource = cast(RawBlobResource, raw)
-    supercompression_scheme = deserialize_supercompression_scheme(blob_resource["super_compression_scheme"])
+    supercompression_scheme = deserialize_supercompression_scheme(blob_resource["supercompression_scheme"])
 
     with open(blob_resource["file_path"], "rb") as blob_file:
         data = blob_file.read()

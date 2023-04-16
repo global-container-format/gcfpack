@@ -7,6 +7,8 @@ GCF metadata (aka description) files.
 import json
 from typing import Any, List, Literal, NotRequired, TextIO, TypedDict, Union, cast
 
+import pydantic
+
 GcfFlagValue = Literal["unpadded"]
 ImageFlagValue = Union[Literal["image1d"], Literal["image2d"], Literal["image3d"]]
 SuperCompressionScheme = Union[Literal["zlib"], Literal["deflate"], Literal["none"], Literal["test"]]
@@ -22,8 +24,8 @@ class Header(TypedDict):
 class BaseResource(TypedDict):
     """The base class for all resources in a description object."""
 
-    format: int
-    super_compression_scheme: SuperCompressionScheme
+    format: NotRequired[int]
+    supercompression_scheme: SuperCompressionScheme
 
 
 class BlobResource(BaseResource):
@@ -69,7 +71,9 @@ def create_sample_metadata_object() -> Metadata:
     :return: An example description object to simplify manual description creation.
     """
 
-    blob_resource_example = cast(BlobResource, {"type": "blob", "file_path": "my-file.bin"})
+    blob_resource_example = cast(
+        BlobResource, {"type": "blob", "file_path": "my-file.bin", "supercompression_scheme": "deflate"}
+    )
 
     image_resource_example = cast(
         ImageResource,
@@ -79,6 +83,7 @@ def create_sample_metadata_object() -> Metadata:
             "height": 100,
             "depth": 1,
             "flags": ["image2d"],
+            "supercompression_scheme": "none",
             "mip_levels": [
                 {
                     "row_stride": 10,
@@ -114,8 +119,11 @@ def validate_metadata(meta: Any):
 
         :param meta: The description object to validate.
     """
+    model = pydantic.create_model_from_typeddict(Metadata)
+    validation_errors = pydantic.validate_model(model, meta)[2]
 
-    return True
+    if validation_errors:
+        raise ValueError("Invalid GCF description.", validation_errors)
 
 
 def load_metadata(description_file: TextIO) -> Metadata:
