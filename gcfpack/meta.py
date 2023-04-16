@@ -25,7 +25,7 @@ class Header(TypedDict):
 class BaseResource(TypedDict):
     """The base class for all resources in a description object."""
 
-    format: NotRequired[int]
+    format: NotRequired[str]
     supercompression_scheme: SuperCompressionScheme
 
 
@@ -80,7 +80,7 @@ def create_sample_metadata_object() -> Metadata:
         ImageResource,
         {
             "type": "image",
-            "format": 9,
+            "format": "R8_UNORM",
             "width": 100,
             "height": 100,
             "depth": 1,
@@ -132,7 +132,7 @@ def validate_image_metadata(res: ImageResource):
         )
 
     if not "format" in res:
-        raise ValueError("Image resources must have an associated format number.", res)
+        raise ValueError("Image resources must have an associated format.", res)
 
 
 def validate_metadata(maybe_meta: Any):

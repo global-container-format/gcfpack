@@ -3,10 +3,11 @@
 from functools import reduce
 from typing import Iterable, Tuple, cast
 
-from gcf import ContainerFlags, Header, Resource, ResourceType, SupercompressionScheme, VkFormat
+from gcf import ContainerFlags, Header, Resource, ResourceType, SupercompressionScheme
 from gcf import blob as gcf_blob
 from gcf import compress
 from gcf import image as gcf_image
+from gcf.resource_format import Format
 
 from .meta import BlobResource as RawBlobResource
 from .meta import GcfFlagValue as RawContainerFlags
@@ -107,7 +108,7 @@ def create_image_resource(header: Header, raw: RawResource) -> Resource:
     )
 
     descriptor = gcf_image.ImageResourceDescriptor(
-        VkFormat(image_resource["format"]),
+        Format[image_resource["format"]],
         uncompressed_size,
         header=header,
         width=image_resource["width"],

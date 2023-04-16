@@ -33,7 +33,7 @@ def raw_image_resource():
         "depth": 1,
         "flags": ["image2d"],
         "supercompression_scheme": "none",
-        "format": 9,
+        "format": "R8_UNORM",
         "mip_levels": [
             {
                 "row_stride": 10,
@@ -70,7 +70,7 @@ def tmp_image_file():
 @pytest.fixture
 def tmp_image_file_image_description(tmp_image_file):
     return {
-        "format": 9,
+        "format": "R8_UNORM",
         "flags": ["image2d"],
         "width": 1,
         "height": 1,
