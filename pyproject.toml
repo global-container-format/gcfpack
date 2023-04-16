@@ -43,3 +43,9 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 html_theme = 'haiku'
 html_static_path = ['_static']
 nitpicky = true
+
+[tool.setuptools]
+packages = ["gcfpack"]
+
+[tool.setuptools.package-data]
+gcfpack = ["py.typed"]
