@@ -187,9 +187,9 @@ def write_gcf_file(out_path: str, header: Header, resources: Iterable[Resource])
 
     This function will override an existing file.
 
-        :param out_path: The path to the file that will be written.
-        :param header: The GCF file header.
-        :param resources: The ordered sequence of GCF resources to store in the file.
+    :param out_path: The path to the file that will be written.
+    :param header: The GCF file header.
+    :param resources: The ordered sequence of GCF resources to store in the file.
     """
 
     with open(out_path, "wb") as out_file:

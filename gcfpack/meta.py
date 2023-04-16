@@ -141,7 +141,7 @@ def validate_metadata(maybe_meta: Any):
     This function will raise a `ValueError` if the provided
     object is not a valid description object.
 
-        :param meta: The description object to validate.
+    :param meta: The description object to validate.
     """
     meta_model = pydantic.create_model_from_typeddict(Metadata)
     validation_errors = pydantic.validate_model(meta_model, maybe_meta)[2]  # pylint: disable=no-member
@@ -162,9 +162,9 @@ def load_metadata(description_file: TextIO) -> Metadata:
     This function will raise an `IOError` if the provided file
     is not a valid description file.
 
-        :param description_file: The description file.
+    :param description_file: The description file.
 
-        :return: The loaded description object.
+    :return: The loaded description object.
     """
 
     try:
