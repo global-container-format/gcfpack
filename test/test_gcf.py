@@ -14,9 +14,10 @@ from .fixtures import (
     raw_container_flag_values,
     raw_image_resource,
     raw_supercompression_scheme_values,
-    tmp_image_file,
     tmp_image_file_blob_description,
     tmp_image_file_image_description,
+    tmp_image_file,
+    tmp_image_file2
 )
 
 
@@ -66,7 +67,7 @@ def test_create_header(gcf_description):
     assert header.resource_count == 2
 
 
-def test_create_image_resource(tmp_image_file, tmp_image_file_image_description):
+def test_create_image_resource(tmp_image_file_image_description):
     description: meta.Metadata = {"header": {"version": 2}, "resources": [tmp_image_file_image_description]}
 
     header = gcf.create_header(description)
@@ -86,12 +87,51 @@ def test_create_image_resource(tmp_image_file, tmp_image_file_image_description)
     assert image_result.mip_levels[0].data == b"\xff"
 
 
+def test_create_image_resource_multiple_layers(tmp_image_file_image_description: meta.ImageResource):
+    description: meta.Metadata = {"header": {"version": 2}, "resources": [tmp_image_file_image_description]}
+    mip_level = tmp_image_file_image_description["mip_levels"][0]
+
+    mip_level["layers"].append(
+        mip_level["layers"][0]  # Duplicate layer
+    )
+
+    header = gcf.create_header(description)
+    result = gcf.create_image_resource(header, tmp_image_file_image_description)
+
+    assert isinstance(result, ImageResource)
+
+    image_result = cast(ImageResource, result)
+
+    assert len(image_result.mip_levels) == 1
+    assert image_result.descriptor.size == 2
+    assert image_result.mip_levels[0].descriptor.compressed_size == 2
+    assert image_result.mip_levels[0].descriptor.uncompressed_size == 2
+    assert image_result.mip_levels[0].descriptor.row_stride == 1
+    assert image_result.mip_levels[0].descriptor.depth_stride == 1
+    assert image_result.mip_levels[0].descriptor.layer_stride == 1
+    assert image_result.mip_levels[0].data == b"\xff\xff"
+
+
+def test_create_image_resource_multiple_layers_different_size(
+    tmp_image_file2,
+    tmp_image_file_image_description: meta.ImageResource
+):
+    description: meta.Metadata = {"header": {"version": 2}, "resources": [tmp_image_file_image_description]}
+    mip_level = tmp_image_file_image_description["mip_levels"][0]
+
+    mip_level["layers"].append(tmp_image_file2)  # Layer data with different size
+    header = gcf.create_header(description)
+
+    with pytest.raises(ValueError):
+        gcf.create_image_resource(header, tmp_image_file_image_description)
+
+
 def test_compress_data():
     for scheme in [SupercompressionScheme.NO_COMPRESSION, SupercompressionScheme.DEFLATE, SupercompressionScheme.ZLIB]:
         assert gcf.compress_data(b"asd", scheme)
 
 
-def test_create_blob_resource(tmp_image_file, tmp_image_file_blob_description):
+def test_create_blob_resource(tmp_image_file_blob_description):
     description: meta.Metadata = {"header": {"version": 2}, "resources": [tmp_image_file_blob_description]}
 
     header = gcf.create_header(description)

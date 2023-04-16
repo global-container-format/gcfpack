@@ -30,15 +30,12 @@ def raw_image_resource():
         "type": "image",
         "width": 100,
         "height": 100,
-        "depth": 1,
         "flags": ["image2d"],
         "supercompression_scheme": "none",
         "format": "R8_UNORM",
         "mip_levels": [
             {
                 "row_stride": 10,
-                "depth_stride": 200,
-                "layer_stride": 200,
                 "layers": ["only-layer.bin"],
             }
         ],
@@ -67,6 +64,23 @@ def tmp_image_file():
     os.unlink(tmp.name)
 
 
+@pytest.fixture(scope="session")
+def tmp_image_file2():
+    """A temporary raw image data file.
+
+    The create image will be monochrome, one byte per pixel, white,
+    w/size 2x1.
+    """
+
+    tmp = tempfile.NamedTemporaryFile("wb", delete=False)
+    tmp.write(b"\xff\xff")
+    tmp.close()
+
+    yield tmp.name
+
+    os.unlink(tmp.name)
+
+
 @pytest.fixture
 def tmp_image_file_image_description(tmp_image_file):
     return {
@@ -74,10 +88,9 @@ def tmp_image_file_image_description(tmp_image_file):
         "flags": ["image2d"],
         "width": 1,
         "height": 1,
-        "depth": 1,
         "supercompression_scheme": "none",
         "type": "image",
-        "mip_levels": [{"row_stride": 1, "depth_stride": 1, "layer_stride": 1, "layers": [tmp_image_file]}],
+        "mip_levels": [{"row_stride": 1, "layers": [tmp_image_file]}],
     }
 
 

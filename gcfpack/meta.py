@@ -39,9 +39,9 @@ class BlobResource(BaseResource):
 class ImageMipLevel(TypedDict):
     """An image mip level representation."""
 
-    row_stride: int
-    depth_stride: int
-    layer_stride: int
+    row_stride: NotRequired[int]
+    depth_stride: NotRequired[int]
+    layer_stride: NotRequired[int]
     layers: List[str]
 
 
@@ -50,8 +50,8 @@ class ImageResource(BaseResource):
 
     type: Literal["image"]
     width: int
-    height: int
-    depth: int
+    height: NotRequired[int]
+    depth: NotRequired[int]
     flags: List[ImageFlagValue]
     mip_levels: List[ImageMipLevel]
 
@@ -83,14 +83,11 @@ def create_sample_metadata_object() -> Metadata:
             "format": "R8_UNORM",
             "width": 100,
             "height": 100,
-            "depth": 1,
             "flags": ["image2d"],
             "supercompression_scheme": "none",
             "mip_levels": [
                 {
                     "row_stride": 10,
-                    "depth_stride": 200,
-                    "layer_stride": 200,
                     "layers": ["only-layer.bin"],
                 }
             ],
@@ -133,6 +130,26 @@ def validate_image_metadata(res: ImageResource):
 
     if not "format" in res:
         raise ValueError("Image resources must have an associated format.", res)
+
+    if "image1d" not in res["flags"]:
+        if not "height" in res:
+            raise ValueError("2D and 3D image resources require height to be specified.", res)
+
+        for mip in res["mip_levels"]:
+            if not "row_stride" in mip:
+                raise ValueError("2D and 3D image resources require row stride to be specified.", res)
+
+    if "image3d" in res["flags"]:
+        if not "depth" in res:
+            raise ValueError("3D image resources require depth to be specified.", res)
+
+        for mip in res["mip_levels"]:
+            if not "depth_stride" in mip:
+                raise ValueError("3D image resources require depth stride to be specified.", res)
+
+    for mip in res["mip_levels"]:
+        if len(mip["layers"]) > 1 and not "layer_stride" in mip:
+            raise ValueError("Multi-layer image resources require layer stride to be specified.", res)
 
 
 def validate_metadata(maybe_meta: Any):

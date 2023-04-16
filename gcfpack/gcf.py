@@ -69,8 +69,9 @@ def create_header(desc: RawGcfDescription) -> Header:
 
     raw_header = desc["header"]
     gcf_version = raw_header["version"]
+    flags = deserialize_container_flags(desc["header"].get("flags", []))
 
-    return Header(len(desc["resources"]), deserialize_container_flags(desc["header"].get("flags", [])), gcf_version)
+    return Header(len(desc["resources"]), flags, gcf_version)
 
 
 def create_image_mip_level(
@@ -80,15 +81,25 @@ def create_image_mip_level(
     """Create an image mip level from its description."""
 
     uncompressed_data: bytes = b""
+    uncompressed_layer_size = -1
 
     for layer in level["layers"]:
         with open(layer, "rb") as layer_file:
-            uncompressed_data += layer_file.read()
+            layer_data = layer_file.read()
+            uncompressed_data += layer_data
+
+            if uncompressed_layer_size < 0:
+                uncompressed_layer_size = len(layer_data)
+            elif not uncompressed_layer_size == len(layer_data):
+                raise ValueError("Layers must all have the same size.")
 
     compressed_data = compress_data(uncompressed_data, supercompression_scheme)
+    row_stride = level.get("row_stride", uncompressed_layer_size)
+    depth_stride = level.get("depth_stride", row_stride)
+    layer_stride = level.get("layer_stride", depth_stride)
 
     descriptor = gcf_image.MipLevelDescriptor(
-        len(compressed_data), len(uncompressed_data), level["row_stride"], level["depth_stride"], level["layer_stride"]
+        len(compressed_data), len(uncompressed_data), row_stride, depth_stride, layer_stride
     )
 
     return gcf_image.MipLevel(descriptor, compressed_data)
@@ -112,8 +123,8 @@ def create_image_resource(header: Header, raw: RawResource) -> Resource:
         uncompressed_size,
         header=header,
         width=image_resource["width"],
-        height=image_resource["height"],
-        depth=image_resource["depth"],
+        height=image_resource.get("height", 1),
+        depth=image_resource.get("depth", 1),
         layer_count=len(raw_mip_levels[0]["layers"]),
         mip_level_count=len(raw_mip_levels),
         supercompression_scheme=supercompression_scheme,

@@ -94,3 +94,74 @@ def test_validate_image_metadata_too_many_image_flags(raw_image_resource: meta.I
 
     with pytest.raises(ValueError):
         meta.validate_image_metadata(raw_image_resource)
+
+
+def test_validate_image_metadata_no_depth(raw_image_resource: meta.ImageResource):
+    mip_level = raw_image_resource["mip_levels"][0]
+    raw_image_resource["flags"] = ["image3d"]
+    mip_level["depth_stride"] = 5
+
+    if "depth" in raw_image_resource:
+        del raw_image_resource["depth"]
+
+    with pytest.raises(ValueError):
+        meta.validate_image_metadata(raw_image_resource)
+
+
+def test_validate_image_metadata_no_depth_stride(raw_image_resource: meta.ImageResource):
+    mip_level = raw_image_resource["mip_levels"][0]
+    raw_image_resource["flags"] = ["image3d"]
+    raw_image_resource["depth"] = 5
+
+    if "depth_stride" in mip_level:
+        del mip_level["depth_stride"]
+
+    with pytest.raises(ValueError):
+        meta.validate_image_metadata(raw_image_resource)
+
+
+def test_validate_image_metadata_no_layer_stride(raw_image_resource: meta.ImageResource):
+    mip_level = raw_image_resource["mip_levels"][0]
+    raw_image_resource["flags"] = ["image3d"]
+    mip_level["layers"] = ["a", "b"]
+
+    if "layer_stride" in mip_level:
+        del mip_level["layer_stride"]
+
+    with pytest.raises(ValueError):
+        meta.validate_image_metadata(raw_image_resource)
+
+
+def test_validate_image_metadata_no_row_stride(raw_image_resource: meta.ImageResource):
+    mip_level = raw_image_resource["mip_levels"][0]
+    raw_image_resource["flags"] = ["image2d"]
+
+    if "row_stride" in mip_level:
+        del mip_level["row_stride"]
+
+    with pytest.raises(ValueError):
+        meta.validate_image_metadata(raw_image_resource)
+
+
+def test_validate_image_metadata_no_height(raw_image_resource: meta.ImageResource):
+    raw_image_resource["flags"] = ["image2d"]
+
+    if "height" in raw_image_resource:
+        del raw_image_resource["height"]
+
+    with pytest.raises(ValueError):
+        meta.validate_image_metadata(raw_image_resource)
+
+
+def test_validate_image_metadata_1d_image(raw_image_resource: meta.ImageResource):
+    mip_level = raw_image_resource["mip_levels"][0]
+    raw_image_resource["flags"] = ["image1d"]
+
+    for field in ("depth", "height"):
+        if field in raw_image_resource:
+            del raw_image_resource[field]
+
+    if "row_stride" in mip_level:
+        del mip_level["row_stride"]
+
+    meta.validate_image_metadata(raw_image_resource)
