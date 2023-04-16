@@ -1,5 +1,25 @@
 # GCFPack - The CGF file packer
 
+GCFPack is a low level GCF file packaging tool. It ingests a description file and one or more
+data files and outputs a GCF archive.
+
+The description file is formatted as JSON and provides all GCF and resource metadata. The
+data files are the resources to be included in the GCF file. **GCFPack does not alter the given resources**,
+nor will it check data validity. This means image resources must be stored raw.
+
+GCFPack is mainly intended for use in data pipelines, with automated tools generating the description files
+and converting the data accordingly.
+
+## Usage
+
+To run GCFPack, execute
+
+```
+python -mgcfpack
+```
+
+This will show the available commands.
+
 ## Development
 
 To install the development tools, run:
