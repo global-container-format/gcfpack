@@ -2,7 +2,7 @@
 
 import click
 
-from . import meta
+from . import gcf, meta
 
 
 def initialise_sample_description_file(path: str):
@@ -35,3 +35,8 @@ def create_gcf_file(description_path: str, gcf_path: str):
     :param description_path: Description file path.
     :param gcf_path: Destination file path.
     """
+    with open(description_path, "r", encoding="utf-8") as description_file:
+        description = meta.load_metadata(description_file)
+
+    header, resources = gcf.create_gcf_file(description)
+    gcf.write_gcf_file(gcf_path, header, resources)

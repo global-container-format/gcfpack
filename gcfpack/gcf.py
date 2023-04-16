@@ -2,7 +2,7 @@
 
 import os
 from functools import reduce
-from typing import Iterable, cast
+from typing import Iterable, Tuple, cast
 
 from gcf import ContainerFlags, Header, Resource, ResourceType, SupercompressionScheme, VkFormat
 from gcf import blob as gcf_blob
@@ -185,3 +185,36 @@ def create_resource(header: Header, raw: RawResource) -> Resource:
         return create_image_resource(header, cast(RawImageResource, raw))
 
     raise ValueError("Unsupported resource type.", res_type)
+
+
+def create_gcf_file(desc: RawGcfDescription) -> Tuple[Header, Iterable[Resource]]:
+    """Create a GCF file from description.
+
+    :param desc: The GCF file description.
+    :return: A tuple containing the GCF header and the related sequence of resources.
+    """
+
+    header = create_header(desc)
+    resources = []
+
+    for resource_desc in desc["resources"]:
+        resources.append(create_resource(header, resource_desc))
+
+    return header, resources
+
+
+def write_gcf_file(out_path: str, header: Header, resources: Iterable[Resource]):
+    """Write a GCF file.
+
+    This function will override an existing file.
+
+        :param out_path: The path to the file that will be written.
+        :param header: The GCF file header.
+        :param resources: The ordered sequence of GCF resources to store in the file.
+    """
+
+    with open(out_path, "wb") as out_file:
+        out_file.write(header.serialize())
+
+        for res in resources:
+            out_file.write(res.serialize())
