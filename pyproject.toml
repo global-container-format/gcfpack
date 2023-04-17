@@ -10,6 +10,7 @@ readme = "README.md"
 license = {file = "LICENSE"}
 authors = [{ name = "Alfredo Mungo" }]
 keywords = ["gcf", "global", "container", "game", "format", "texture", "generic"]
+dependencies = ["click", "pydantic"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
