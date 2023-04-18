@@ -14,10 +14,10 @@ from .fixtures import (
     raw_container_flag_values,
     raw_image_resource,
     raw_supercompression_scheme_values,
+    tmp_image_file,
+    tmp_image_file2,
     tmp_image_file_blob_description,
     tmp_image_file_image_description,
-    tmp_image_file,
-    tmp_image_file2
 )
 
 
@@ -91,9 +91,7 @@ def test_create_image_resource_multiple_layers(tmp_image_file_image_description:
     description: meta.Metadata = {"header": {"version": 2}, "resources": [tmp_image_file_image_description]}
     mip_level = tmp_image_file_image_description["mip_levels"][0]
 
-    mip_level["layers"].append(
-        mip_level["layers"][0]  # Duplicate layer
-    )
+    mip_level["layers"].append(mip_level["layers"][0])  # Duplicate layer
 
     header = gcf.create_header(description)
     result = gcf.create_image_resource(header, tmp_image_file_image_description)
@@ -113,8 +111,7 @@ def test_create_image_resource_multiple_layers(tmp_image_file_image_description:
 
 
 def test_create_image_resource_multiple_layers_different_size(
-    tmp_image_file2,
-    tmp_image_file_image_description: meta.ImageResource
+    tmp_image_file2, tmp_image_file_image_description: meta.ImageResource
 ):
     description: meta.Metadata = {"header": {"version": 2}, "resources": [tmp_image_file_image_description]}
     mip_level = tmp_image_file_image_description["mip_levels"][0]

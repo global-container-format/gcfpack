@@ -77,6 +77,8 @@ def create_header(desc: RawGcfDescription) -> Header:
 def create_image_mip_level(
     supercompression_scheme: SupercompressionScheme,
     level: RawImageMipLevel,
+    height: int,
+    depth: int,
 ) -> gcf_image.MipLevel:
     """Create an image mip level from its description."""
 
@@ -95,8 +97,8 @@ def create_image_mip_level(
 
     compressed_data = compress_data(uncompressed_data, supercompression_scheme)
     row_stride = level.get("row_stride", uncompressed_layer_size)
-    depth_stride = level.get("depth_stride", row_stride)
-    layer_stride = level.get("layer_stride", depth_stride)
+    depth_stride = level.get("depth_stride", row_stride * height)
+    layer_stride = level.get("layer_stride", depth_stride * depth)
 
     descriptor = gcf_image.MipLevelDescriptor(
         len(compressed_data), len(uncompressed_data), row_stride, depth_stride, layer_stride
@@ -109,10 +111,22 @@ def create_image_resource(header: Header, raw: RawResource) -> Resource:
     """Create a image resource from its raw description."""
 
     image_resource = cast(RawImageResource, raw)
+    height = image_resource.get("height", 1)
+    depth = image_resource.get("depth", 1)
     raw_mip_levels = image_resource["mip_levels"]
     supercompression_scheme = deserialize_supercompression_scheme(image_resource["supercompression_scheme"])
 
-    mip_levels = tuple(map(lambda level: create_image_mip_level(supercompression_scheme, level), raw_mip_levels))
+    mip_levels = tuple(
+        map(
+            lambda level_data: create_image_mip_level(
+                supercompression_scheme,
+                level_data[1],
+                round(max(1, height * 0.5 ** level_data[0])),
+                round(max(1, depth * 0.5 ** level_data[0])),
+            ),
+            enumerate(raw_mip_levels),
+        )
+    )
 
     uncompressed_size = reduce(
         lambda a, b: sum((a, b)), map(lambda level: level.descriptor.uncompressed_size, mip_levels), 0
@@ -123,8 +137,8 @@ def create_image_resource(header: Header, raw: RawResource) -> Resource:
         uncompressed_size,
         header=header,
         width=image_resource["width"],
-        height=image_resource.get("height", 1),
-        depth=image_resource.get("depth", 1),
+        height=height,
+        depth=depth,
         layer_count=len(raw_mip_levels[0]["layers"]),
         mip_level_count=len(raw_mip_levels),
         supercompression_scheme=supercompression_scheme,

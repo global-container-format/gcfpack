@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "gcfpack"
 description = "GCF file packer."
-version = "1.0.0"
+version = "1.0.1"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [{ name = "Alfredo Mungo" }]
