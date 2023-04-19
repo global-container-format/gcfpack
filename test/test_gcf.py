@@ -4,6 +4,7 @@ import pytest
 from gcf import Header, ResourceType, SupercompressionScheme
 from gcf.blob import BlobResource
 from gcf.image import ImageResource
+from gcf.resource_format import Format
 
 from gcfpack import gcf, meta
 
@@ -201,3 +202,11 @@ def test_write_gcf_file(empty_tmp_file, tmp_image_file_image_description, tmp_im
 
     assert header.version == 2
     assert header.resource_count == 2
+
+
+def test_deserialize_format_numeric():
+    assert gcf.deserialize_format(123) == 123
+
+
+def test_deserialize_format_enum():
+    assert gcf.deserialize_format(Format.E5B9G9R9_UFLOAT_PACK32) == 123

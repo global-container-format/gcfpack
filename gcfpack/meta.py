@@ -25,7 +25,7 @@ class Header(TypedDict):
 class BaseResource(TypedDict):
     """The base class for all resources in a description object."""
 
-    format: NotRequired[str]
+    format: NotRequired[Union[str, int]]
     supercompression_scheme: SuperCompressionScheme
 
 

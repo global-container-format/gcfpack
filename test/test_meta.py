@@ -82,6 +82,13 @@ def test_validate_image_metadata_empty_flags(raw_image_resource: meta.ImageResou
         meta.validate_image_metadata(raw_image_resource)
 
 
+def test_validate_image_metadata_numeric_format(raw_image_resource: meta.ImageResource):
+    raw_image_resource["format"] = 8
+
+    # No exception upon success
+    meta.validate_image_metadata(raw_image_resource)
+
+
 def test_validate_image_metadata_double_flag(raw_image_resource: meta.ImageResource):
     raw_image_resource["flags"] = ["image1d", "image1d"]
 

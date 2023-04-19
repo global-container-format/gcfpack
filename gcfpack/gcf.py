@@ -1,7 +1,7 @@
 """GCF file packaging."""
 
 from functools import reduce
-from typing import Iterable, Tuple, cast
+from typing import Iterable, Tuple, Union, cast
 
 from gcf import ContainerFlags, Header, Resource, ResourceType, SupercompressionScheme
 from gcf import blob as gcf_blob
@@ -74,6 +74,15 @@ def create_header(desc: RawGcfDescription) -> Header:
     return Header(len(desc["resources"]), flags, gcf_version)
 
 
+def deserialize_format(raw_format: Union[str, int]) -> int:
+    """Deserialize a raw format representation into a numeric format value."""
+
+    if isinstance(raw_format, str):
+        return Format[raw_format].value
+
+    return raw_format
+
+
 def create_image_mip_level(
     supercompression_scheme: SupercompressionScheme,
     level: RawImageMipLevel,
@@ -132,8 +141,10 @@ def create_image_resource(header: Header, raw: RawResource) -> Resource:
         lambda a, b: sum((a, b)), map(lambda level: level.descriptor.uncompressed_size, mip_levels), 0
     )
 
+    data_format = deserialize_format(image_resource["format"])
+
     descriptor = gcf_image.ImageResourceDescriptor(
-        Format[image_resource["format"]],
+        data_format,
         uncompressed_size,
         header=header,
         width=image_resource["width"],
