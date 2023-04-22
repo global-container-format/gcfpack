@@ -14,7 +14,7 @@ keywords = ["gcf", "global", "container", "game", "format", "texture", "generic"
 dependencies = [
     "click",
     "pydantic",
-    "pygcf@https://github.com/global-container-format/pygcf/archive/refs/tags/v4.0.0.zip#sha256=979932766B103C7DF4B98567F529493AFB95F18648AFD26F0F991FF0C274FB3D"
+    "pygcf@https://github.com/global-container-format/pygcf/archive/refs/tags/v4.0.0.zip#sha256=979932766b103c7df4b98567f529493afb95f18648afd26f0f991ff0c274fb3d"
 ]
 
 classifiers = [
