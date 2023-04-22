@@ -5,12 +5,12 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "gcfpack"
 description = "GCF file packer."
-version = "1.0.1"
+version = "1.0.2"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [{ name = "Alfredo Mungo" }]
 keywords = ["gcf", "global", "container", "game", "format", "texture", "generic"]
-dependencies = ["click", "pydantic"]
+dependencies = ["click", "pydantic", "pygcf"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
