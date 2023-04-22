@@ -6,6 +6,7 @@ name = "pypi"
 [packages]
 click = "*"
 pydantic = "*"
+pygcf = {git = "https://github.com/global-container-format/pygcf"}
 
 [dev-packages]
 sphinx = "*"
