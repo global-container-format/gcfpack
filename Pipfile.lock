@@ -76,7 +76,7 @@
         },
         "pygcf": {
             "git": "https://github.com/global-container-format/pygcf",
-            "ref": "0e137ca79004dd3dd390c900a6da2c90d8c7f469"
+            "ref": "77ab83263216ecf236cb2b7cf837a99843ebdf76"
         },
         "typing-extensions": {
             "hashes": [

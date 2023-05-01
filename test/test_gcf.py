@@ -3,7 +3,7 @@ from typing import cast
 import pytest
 from gcf import Header, ResourceType, SupercompressionScheme
 from gcf.blob import BlobResource
-from gcf.image import ImageResource
+from gcf.texture import TextureResource
 from gcf.resource_format import Format
 
 from gcfpack import gcf, meta
@@ -13,12 +13,12 @@ from .fixtures import (
     gcf_description,
     raw_blob_resource,
     raw_container_flag_values,
-    raw_image_resource,
+    raw_texture_resource,
     raw_supercompression_scheme_values,
-    tmp_image_file,
-    tmp_image_file2,
-    tmp_image_file_blob_description,
-    tmp_image_file_image_description,
+    tmp_texture_file,
+    tmp_texture_file2,
+    tmp_texture_file_blob_description,
+    tmp_texture_file_texture_description,
 )
 
 
@@ -47,7 +47,7 @@ def test_deserialize_supercompression_scheme_invalid():
 
 @pytest.mark.parametrize(
     "resource_name,resource_type",
-    [(raw_blob_resource.__name__, ResourceType.BLOB), (raw_image_resource.__name__, ResourceType.IMAGE)],
+    [(raw_blob_resource.__name__, ResourceType.BLOB), (raw_texture_resource.__name__, ResourceType.TEXTURE)],
 )
 def test_get_resource_type(resource_name, resource_type, request):
     resource = request.getfixturevalue(resource_name)
@@ -68,60 +68,60 @@ def test_create_header(gcf_description):
     assert header.resource_count == 2
 
 
-def test_create_image_resource(tmp_image_file_image_description):
-    description: meta.Metadata = {"header": {"version": 2}, "resources": [tmp_image_file_image_description]}
+def test_create_texture_resource(tmp_texture_file_texture_description):
+    description: meta.Metadata = {"header": {"version": 2}, "resources": [tmp_texture_file_texture_description]}
 
     header = gcf.create_header(description)
-    result = gcf.create_image_resource(header, tmp_image_file_image_description)
+    result = gcf.create_texture_resource(header, tmp_texture_file_texture_description)
 
-    assert isinstance(result, ImageResource)
+    assert isinstance(result, TextureResource)
 
-    image_result = cast(ImageResource, result)
+    texture_result = cast(TextureResource, result)
 
-    assert len(image_result.mip_levels) == 1
-    assert image_result.descriptor.size == 1
-    assert image_result.mip_levels[0].descriptor.compressed_size == 1
-    assert image_result.mip_levels[0].descriptor.uncompressed_size == 1
-    assert image_result.mip_levels[0].descriptor.row_stride == 1
-    assert image_result.mip_levels[0].descriptor.depth_stride == 1
-    assert image_result.mip_levels[0].descriptor.layer_stride == 1
-    assert image_result.mip_levels[0].data == b"\xff"
+    assert len(texture_result.mip_levels) == 1
+    assert texture_result.descriptor.size == 1
+    assert texture_result.mip_levels[0].descriptor.compressed_size == 1
+    assert texture_result.mip_levels[0].descriptor.uncompressed_size == 1
+    assert texture_result.mip_levels[0].descriptor.row_stride == 1
+    assert texture_result.mip_levels[0].descriptor.depth_stride == 1
+    assert texture_result.mip_levels[0].descriptor.layer_stride == 1
+    assert texture_result.mip_levels[0].data == b"\xff"
 
 
-def test_create_image_resource_multiple_layers(tmp_image_file_image_description: meta.ImageResource):
-    description: meta.Metadata = {"header": {"version": 2}, "resources": [tmp_image_file_image_description]}
-    mip_level = tmp_image_file_image_description["mip_levels"][0]
+def test_create_texture_resource_multiple_layers(tmp_texture_file_texture_description: meta.TextureResource):
+    description: meta.Metadata = {"header": {"version": 2}, "resources": [tmp_texture_file_texture_description]}
+    mip_level = tmp_texture_file_texture_description["mip_levels"][0]
 
     mip_level["layers"].append(mip_level["layers"][0])  # Duplicate layer
 
     header = gcf.create_header(description)
-    result = gcf.create_image_resource(header, tmp_image_file_image_description)
+    result = gcf.create_texture_resource(header, tmp_texture_file_texture_description)
 
-    assert isinstance(result, ImageResource)
+    assert isinstance(result, TextureResource)
 
-    image_result = cast(ImageResource, result)
+    texture_result = cast(TextureResource, result)
 
-    assert len(image_result.mip_levels) == 1
-    assert image_result.descriptor.size == 2
-    assert image_result.mip_levels[0].descriptor.compressed_size == 2
-    assert image_result.mip_levels[0].descriptor.uncompressed_size == 2
-    assert image_result.mip_levels[0].descriptor.row_stride == 1
-    assert image_result.mip_levels[0].descriptor.depth_stride == 1
-    assert image_result.mip_levels[0].descriptor.layer_stride == 1
-    assert image_result.mip_levels[0].data == b"\xff\xff"
+    assert len(texture_result.mip_levels) == 1
+    assert texture_result.descriptor.size == 2
+    assert texture_result.mip_levels[0].descriptor.compressed_size == 2
+    assert texture_result.mip_levels[0].descriptor.uncompressed_size == 2
+    assert texture_result.mip_levels[0].descriptor.row_stride == 1
+    assert texture_result.mip_levels[0].descriptor.depth_stride == 1
+    assert texture_result.mip_levels[0].descriptor.layer_stride == 1
+    assert texture_result.mip_levels[0].data == b"\xff\xff"
 
 
-def test_create_image_resource_multiple_layers_different_size(
-    tmp_image_file2, tmp_image_file_image_description: meta.ImageResource
+def test_create_texture_resource_multiple_layers_different_size(
+    tmp_texture_file2, tmp_texture_file_texture_description: meta.TextureResource
 ):
-    description: meta.Metadata = {"header": {"version": 2}, "resources": [tmp_image_file_image_description]}
-    mip_level = tmp_image_file_image_description["mip_levels"][0]
+    description: meta.Metadata = {"header": {"version": 2}, "resources": [tmp_texture_file_texture_description]}
+    mip_level = tmp_texture_file_texture_description["mip_levels"][0]
 
-    mip_level["layers"].append(tmp_image_file2)  # Layer data with different size
+    mip_level["layers"].append(tmp_texture_file2)  # Layer data with different size
     header = gcf.create_header(description)
 
     with pytest.raises(ValueError):
-        gcf.create_image_resource(header, tmp_image_file_image_description)
+        gcf.create_texture_resource(header, tmp_texture_file_texture_description)
 
 
 def test_compress_data():
@@ -129,11 +129,11 @@ def test_compress_data():
         assert gcf.compress_data(b"asd", scheme)
 
 
-def test_create_blob_resource(tmp_image_file_blob_description):
-    description: meta.Metadata = {"header": {"version": 2}, "resources": [tmp_image_file_blob_description]}
+def test_create_blob_resource(tmp_texture_file_blob_description):
+    description: meta.Metadata = {"header": {"version": 2}, "resources": [tmp_texture_file_blob_description]}
 
     header = gcf.create_header(description)
-    result = gcf.create_blob_resource(header, tmp_image_file_blob_description)
+    result = gcf.create_blob_resource(header, tmp_texture_file_blob_description)
 
     assert isinstance(result, BlobResource)
 
@@ -147,8 +147,8 @@ def test_create_blob_resource(tmp_image_file_blob_description):
 @pytest.mark.parametrize(
     "resource_type,resource_desc_name",
     [
-        (BlobResource, tmp_image_file_blob_description.__name__),
-        (ImageResource, tmp_image_file_image_description.__name__),
+        (BlobResource, tmp_texture_file_blob_description.__name__),
+        (TextureResource, tmp_texture_file_texture_description.__name__),
     ],
 )
 def test_create_resource(request, resource_type, resource_desc_name):
@@ -172,10 +172,10 @@ def test_create_resource_invalid():
         gcf.create_resource(header, resource_desc)
 
 
-def test_create_gcf_file(tmp_image_file_image_description, tmp_image_file_blob_description):
+def test_create_gcf_file(tmp_texture_file_texture_description, tmp_texture_file_blob_description):
     description: meta.Metadata = {
         "header": {"version": 2, "flags": ["unpadded"]},
-        "resources": [tmp_image_file_blob_description, tmp_image_file_image_description],
+        "resources": [tmp_texture_file_blob_description, tmp_texture_file_texture_description],
     }
 
     header, resources = gcf.create_gcf_file(description)
@@ -184,13 +184,13 @@ def test_create_gcf_file(tmp_image_file_image_description, tmp_image_file_blob_d
     assert header.resource_count == 2
     assert len(res_list) == 2
     assert isinstance(res_list[0], BlobResource)
-    assert isinstance(res_list[1], ImageResource)
+    assert isinstance(res_list[1], TextureResource)
 
 
-def test_write_gcf_file(empty_tmp_file, tmp_image_file_image_description, tmp_image_file_blob_description):
+def test_write_gcf_file(empty_tmp_file, tmp_texture_file_texture_description, tmp_texture_file_blob_description):
     description: meta.Metadata = {
         "header": {"version": 2, "flags": ["unpadded"]},
-        "resources": [tmp_image_file_blob_description, tmp_image_file_image_description],
+        "resources": [tmp_texture_file_blob_description, tmp_texture_file_texture_description],
     }
 
     header, resources = gcf.create_gcf_file(description)

@@ -11,7 +11,7 @@ from typing import Any, List, Literal, NotRequired, TextIO, TypedDict, Union, ca
 import pydantic
 
 GcfFlagValue = Literal["unpadded"]
-ImageFlagValue = Union[Literal["image1d"], Literal["image2d"], Literal["image3d"]]
+TextureFlagValue = Union[Literal["texture1d"], Literal["texture2d"], Literal["texture3d"]]
 SuperCompressionScheme = Union[Literal["zlib"], Literal["deflate"], Literal["none"], Literal["test"]]
 
 
@@ -36,27 +36,28 @@ class BlobResource(BaseResource):
     file_path: str
 
 
-class ImageMipLevel(TypedDict):
-    """An image mip level representation."""
+class TextureMipLevel(TypedDict):
+    """An texture mip level representation."""
 
     row_stride: NotRequired[int]
-    depth_stride: NotRequired[int]
+    slice_stride: NotRequired[int]
     layer_stride: NotRequired[int]
     layers: List[str]
 
 
-class ImageResource(BaseResource):
-    """An image resource representation."""
+class TextureResource(BaseResource):
+    """An texture resource representation."""
 
-    type: Literal["image"]
+    type: Literal["texture"]
     width: int
     height: NotRequired[int]
     depth: NotRequired[int]
-    flags: List[ImageFlagValue]
-    mip_levels: List[ImageMipLevel]
+    flags: List[TextureFlagValue]
+    mip_levels: List[TextureMipLevel]
+    texture_group: int
 
 
-Resource = Union[BlobResource, ImageResource]
+Resource = Union[BlobResource, TextureResource]
 
 
 class Metadata(TypedDict):
@@ -76,14 +77,14 @@ def create_sample_metadata_object() -> Metadata:
         BlobResource, {"type": "blob", "file_path": "my-file.bin", "supercompression_scheme": "deflate"}
     )
 
-    image_resource_example = cast(
-        ImageResource,
+    tex_resource_example = cast(
+        TextureResource,
         {
-            "type": "image",
+            "type": "texture",
             "format": "R8_UNORM",
             "width": 100,
             "height": 100,
-            "flags": ["image2d"],
+            "flags": ["texture2d"],
             "supercompression_scheme": "none",
             "mip_levels": [
                 {
@@ -96,7 +97,7 @@ def create_sample_metadata_object() -> Metadata:
 
     return {
         "header": {"version": 2, "flags": []},
-        "resources": [blob_resource_example, image_resource_example],
+        "resources": [blob_resource_example, tex_resource_example],
     }
 
 
@@ -110,46 +111,46 @@ def store_metadata(out_file: TextIO, meta: Metadata):
     json.dump(meta, out_file, indent=4)
 
 
-def validate_image_metadata(res: ImageResource):
-    """Validate image metadata.
+def validate_texture_metadata(res: TextureResource):
+    """Validate texture metadata.
 
     The metadata is assumed to be already matching
     the general resource structure.
 
     This function will raise a `ValueError` if the provided
-    description object is not a valid image resource.
+    description object is not a valid texture resource.
     """
 
-    image_types = ("image1d", "image2d", "image3d")
-    res_image_type_count = reduce(lambda total, flag: total + int(flag in image_types), res["flags"], 0)
+    texture_types = ("texture1d", "texture2d", "texture3d")
+    res_texture_type_count = reduce(lambda total, flag: total + int(flag in texture_types), res["flags"], 0)
 
-    if res_image_type_count != 1:
+    if res_texture_type_count != 1:
         raise ValueError(
-            f"Image resources must have exactly one image dimension flag. Found {res_image_type_count}.", res
+            f"Texture resources must have exactly one texture dimension flag. Found {res_texture_type_count}.", res
         )
 
     if not "format" in res:
-        raise ValueError("Image resources must have an associated format.", res)
+        raise ValueError("Texture resources must have an associated format.", res)
 
-    if "image1d" not in res["flags"]:
+    if "texture1d" not in res["flags"]:
         if not "height" in res:
-            raise ValueError("2D and 3D image resources require height to be specified.", res)
+            raise ValueError("2D and 3D texture resources require height to be specified.", res)
 
         for mip in res["mip_levels"]:
             if not "row_stride" in mip:
-                raise ValueError("2D and 3D image resources require row stride to be specified.", res)
+                raise ValueError("2D and 3D texture resources require row stride to be specified.", res)
 
-    if "image3d" in res["flags"]:
+    if "texture3d" in res["flags"]:
         if not "depth" in res:
-            raise ValueError("3D image resources require depth to be specified.", res)
+            raise ValueError("3D texture resources require depth to be specified.", res)
 
         for mip in res["mip_levels"]:
             if not "depth_stride" in mip:
-                raise ValueError("3D image resources require depth stride to be specified.", res)
+                raise ValueError("3D texture resources require depth stride to be specified.", res)
 
     for mip in res["mip_levels"]:
         if len(mip["layers"]) > 1 and not "layer_stride" in mip:
-            raise ValueError("Multi-layer image resources require layer stride to be specified.", res)
+            raise ValueError("Multi-layer texture resources require layer stride to be specified.", res)
 
 
 def validate_metadata(maybe_meta: Any):
@@ -169,8 +170,8 @@ def validate_metadata(maybe_meta: Any):
     meta = cast(Metadata, maybe_meta)
 
     for res in meta["resources"]:
-        if res["type"] == "image":
-            validate_image_metadata(res)
+        if res["type"] == "texture":
+            validate_texture_metadata(res)
 
 
 def load_metadata(description_file: TextIO) -> Metadata:

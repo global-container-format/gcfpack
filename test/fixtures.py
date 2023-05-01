@@ -25,12 +25,12 @@ def raw_blob_resource():
 
 
 @pytest.fixture
-def raw_image_resource():
+def raw_texture_resource():
     return {
-        "type": "image",
+        "type": "texture",
         "width": 100,
         "height": 100,
-        "flags": ["image2d"],
+        "flags": ["texture2d"],
         "supercompression_scheme": "none",
         "format": "R8_UNORM",
         "mip_levels": [
@@ -48,10 +48,10 @@ def gcf_description():
 
 
 @pytest.fixture(scope="session")
-def tmp_image_file():
-    """A temporary raw image data file.
+def tmp_texture_file():
+    """A temporary raw texture data file.
 
-    The create image will be monochrome, one byte per pixel, white,
+    The create texture will be monochrome, one byte per pixel, white,
     w/size 1x1.
     """
 
@@ -65,10 +65,10 @@ def tmp_image_file():
 
 
 @pytest.fixture(scope="session")
-def tmp_image_file2():
-    """A temporary raw image data file.
+def tmp_texture_file2():
+    """A temporary raw texture data file.
 
-    The create image will be monochrome, one byte per pixel, white,
+    The create texture will be monochrome, one byte per pixel, white,
     w/size 2x1.
     """
 
@@ -82,21 +82,21 @@ def tmp_image_file2():
 
 
 @pytest.fixture
-def tmp_image_file_image_description(tmp_image_file):
+def tmp_texture_file_texture_description(tmp_texture_file):
     return {
         "format": "R8_UNORM",
-        "flags": ["image2d"],
+        "flags": ["texture2d"],
         "width": 1,
         "height": 1,
         "supercompression_scheme": "none",
-        "type": "image",
-        "mip_levels": [{"row_stride": 1, "layers": [tmp_image_file]}],
+        "type": "texture",
+        "mip_levels": [{"row_stride": 1, "layers": [tmp_texture_file]}],
     }
 
 
 @pytest.fixture
-def tmp_image_file_blob_description(tmp_image_file):
-    return {"type": "blob", "file_path": tmp_image_file, "supercompression_scheme": "none"}
+def tmp_texture_file_blob_description(tmp_texture_file):
+    return {"type": "blob", "file_path": tmp_texture_file, "supercompression_scheme": "none"}
 
 
 @pytest.fixture

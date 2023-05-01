@@ -3,16 +3,15 @@
 from functools import reduce
 from typing import Iterable, Tuple, Union, cast
 
-from gcf import ContainerFlags, Header, Resource, ResourceType, SupercompressionScheme
-from gcf import blob as gcf_blob
-from gcf import compress
-from gcf import image as gcf_image
-from gcf.resource_format import Format
+from gcf import ContainerFlags, Header, ResourceType, SupercompressionScheme, Format
+from gcf import blob as gcfblob
+from gcf import compression
+from gcf import texture as gcftex
 
 from .meta import BlobResource as RawBlobResource
 from .meta import GcfFlagValue as RawContainerFlags
-from .meta import ImageMipLevel as RawImageMipLevel
-from .meta import ImageResource as RawImageResource
+from .meta import TextureMipLevel as RawTextureMipLevel
+from .meta import TextureResource as RawTextureResource
 from .meta import Metadata as RawGcfDescription
 from .meta import Resource as RawResource
 from .meta import SuperCompressionScheme as RawSupercompressionScheme
@@ -58,8 +57,8 @@ def get_resource_type(res: RawResource) -> ResourceType:
     if res_type == "blob":
         return ResourceType.BLOB
 
-    if res_type == "image":
-        return ResourceType.IMAGE
+    if res_type == "texture":
+        return ResourceType.TEXTURE
 
     raise ValueError("Invalid resource type.", res_type)
 
@@ -83,13 +82,13 @@ def deserialize_format(raw_format: Union[str, int]) -> int:
     return raw_format
 
 
-def create_image_mip_level(
+def create_texture_mip_level(
     supercompression_scheme: SupercompressionScheme,
-    level: RawImageMipLevel,
+    level: RawTextureMipLevel,
     height: int,
     depth: int,
-) -> gcf_image.MipLevel:
-    """Create an image mip level from its description."""
+) -> gcftex.MipLevel:
+    """Create an texture mip level from its description."""
 
     uncompressed_data: bytes = b""
     uncompressed_layer_size = -1
@@ -109,25 +108,25 @@ def create_image_mip_level(
     depth_stride = level.get("depth_stride", row_stride * height)
     layer_stride = level.get("layer_stride", depth_stride * depth)
 
-    descriptor = gcf_image.MipLevelDescriptor(
+    descriptor = gcf_texture.MipLevelDescriptor(
         len(compressed_data), len(uncompressed_data), row_stride, depth_stride, layer_stride
     )
 
-    return gcf_image.MipLevel(descriptor, compressed_data)
+    return gcf_texture.MipLevel(descriptor, compressed_data)
 
 
-def create_image_resource(header: Header, raw: RawResource) -> Resource:
-    """Create a image resource from its raw description."""
+def create_texture_resource(header: Header, raw: RawResource) -> Resource:
+    """Create a texture resource from its raw description."""
 
-    image_resource = cast(RawImageResource, raw)
-    height = image_resource.get("height", 1)
-    depth = image_resource.get("depth", 1)
-    raw_mip_levels = image_resource["mip_levels"]
-    supercompression_scheme = deserialize_supercompression_scheme(image_resource["supercompression_scheme"])
+    texture_resource = cast(RawTextureResource, raw)
+    height = texture_resource.get("height", 1)
+    depth = texture_resource.get("depth", 1)
+    raw_mip_levels = texture_resource["mip_levels"]
+    supercompression_scheme = deserialize_supercompression_scheme(texture_resource["supercompression_scheme"])
 
     mip_levels = tuple(
         map(
-            lambda level_data: create_image_mip_level(
+            lambda level_data: create_texture_mip_level(
                 supercompression_scheme,
                 level_data[1],
                 round(max(1, height * 0.5 ** level_data[0])),
@@ -141,13 +140,13 @@ def create_image_resource(header: Header, raw: RawResource) -> Resource:
         lambda a, b: sum((a, b)), map(lambda level: level.descriptor.uncompressed_size, mip_levels), 0
     )
 
-    data_format = deserialize_format(image_resource["format"])
+    data_format = deserialize_format(texture_resource["format"])
 
-    descriptor = gcf_image.ImageResourceDescriptor(
+    descriptor = gcf_texture.TextureResourceDescriptor(
         data_format,
         uncompressed_size,
         header=header,
-        width=image_resource["width"],
+        width=texture_resource["width"],
         height=height,
         depth=depth,
         layer_count=len(raw_mip_levels[0]["layers"]),
@@ -155,15 +154,7 @@ def create_image_resource(header: Header, raw: RawResource) -> Resource:
         supercompression_scheme=supercompression_scheme,
     )
 
-    return gcf_image.ImageResource(descriptor, mip_levels)
-
-
-def compress_data(data: bytes, scheme: SupercompressionScheme) -> bytes:
-    """Compress GCF data with one of the supported schemes."""
-
-    compressor = compress.COMPRESSOR_TABLE[scheme][0]
-
-    return compressor(data)
+    return gcf_texture.TextureResource(descriptor, mip_levels)
 
 
 def create_blob_resource(header: Header, raw: RawResource) -> Resource:
@@ -176,7 +167,7 @@ def create_blob_resource(header: Header, raw: RawResource) -> Resource:
         data = blob_file.read()
 
     uncompressed_size = len(data)
-    compressed_data = compress_data(data, supercompression_scheme)
+    compressed_data = compression.compress(data, supercompression_scheme.value)
     compressed_size = len(compressed_data)
 
     descriptor = gcf_blob.BlobResourceDescriptor(
@@ -197,8 +188,8 @@ def create_resource(header: Header, raw: RawResource) -> Resource:
     if res_type == ResourceType.BLOB:
         return create_blob_resource(header, cast(RawBlobResource, raw))
 
-    if res_type == ResourceType.IMAGE:
-        return create_image_resource(header, cast(RawImageResource, raw))
+    if res_type == ResourceType.TEXTURE:
+        return create_texture_resource(header, cast(RawTextureResource, raw))
 
     raise ValueError("Unsupported resource type.", res_type)
 

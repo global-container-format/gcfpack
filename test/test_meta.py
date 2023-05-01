@@ -6,7 +6,7 @@ import pytest
 
 from gcfpack import meta
 
-from .fixtures import raw_image_resource
+from .fixtures import raw_texture_resource
 
 
 def test_create_sample_metadata_object():
@@ -63,112 +63,112 @@ def test_validate_metadata_invalid():
         meta.validate_metadata({})
 
 
-def test_validate_image_metadata(raw_image_resource: meta.ImageResource):
+def test_validate_texture_metadata(raw_texture_resource: meta.TextureResource):
     # No exception upon success
-    meta.validate_image_metadata(raw_image_resource)
+    meta.validate_texture_metadata(raw_texture_resource)
 
 
-def test_validate_image_metadata_no_format(raw_image_resource: meta.ImageResource):
-    del raw_image_resource["format"]
-
-    with pytest.raises(ValueError):
-        meta.validate_image_metadata(raw_image_resource)
-
-
-def test_validate_image_metadata_empty_flags(raw_image_resource: meta.ImageResource):
-    raw_image_resource["flags"] = []
+def test_validate_texture_metadata_no_format(raw_texture_resource: meta.TextureResource):
+    del raw_texture_resource["format"]
 
     with pytest.raises(ValueError):
-        meta.validate_image_metadata(raw_image_resource)
+        meta.validate_texture_metadata(raw_texture_resource)
 
 
-def test_validate_image_metadata_numeric_format(raw_image_resource: meta.ImageResource):
-    raw_image_resource["format"] = 8
+def test_validate_texture_metadata_empty_flags(raw_texture_resource: meta.TextureResource):
+    raw_texture_resource["flags"] = []
+
+    with pytest.raises(ValueError):
+        meta.validate_texture_metadata(raw_texture_resource)
+
+
+def test_validate_texture_metadata_numeric_format(raw_texture_resource: meta.TextureResource):
+    raw_texture_resource["format"] = 8
 
     # No exception upon success
-    meta.validate_image_metadata(raw_image_resource)
+    meta.validate_texture_metadata(raw_texture_resource)
 
 
-def test_validate_image_metadata_double_flag(raw_image_resource: meta.ImageResource):
-    raw_image_resource["flags"] = ["image1d", "image1d"]
-
-    with pytest.raises(ValueError):
-        meta.validate_image_metadata(raw_image_resource)
-
-
-def test_validate_image_metadata_too_many_image_flags(raw_image_resource: meta.ImageResource):
-    raw_image_resource["flags"] = ["image1d", "image2d"]
+def test_validate_texture_metadata_double_flag(raw_texture_resource: meta.TextureResource):
+    raw_texture_resource["flags"] = ["texture1d", "texture1d"]
 
     with pytest.raises(ValueError):
-        meta.validate_image_metadata(raw_image_resource)
+        meta.validate_texture_metadata(raw_texture_resource)
 
 
-def test_validate_image_metadata_no_depth(raw_image_resource: meta.ImageResource):
-    mip_level = raw_image_resource["mip_levels"][0]
-    raw_image_resource["flags"] = ["image3d"]
+def test_validate_texture_metadata_too_many_texture_flags(raw_texture_resource: meta.TextureResource):
+    raw_texture_resource["flags"] = ["texture1d", "texture2d"]
+
+    with pytest.raises(ValueError):
+        meta.validate_texture_metadata(raw_texture_resource)
+
+
+def test_validate_texture_metadata_no_depth(raw_texture_resource: meta.TextureResource):
+    mip_level = raw_texture_resource["mip_levels"][0]
+    raw_texture_resource["flags"] = ["texture3d"]
     mip_level["depth_stride"] = 5
 
-    if "depth" in raw_image_resource:
-        del raw_image_resource["depth"]
+    if "depth" in raw_texture_resource:
+        del raw_texture_resource["depth"]
 
     with pytest.raises(ValueError):
-        meta.validate_image_metadata(raw_image_resource)
+        meta.validate_texture_metadata(raw_texture_resource)
 
 
-def test_validate_image_metadata_no_depth_stride(raw_image_resource: meta.ImageResource):
-    mip_level = raw_image_resource["mip_levels"][0]
-    raw_image_resource["flags"] = ["image3d"]
-    raw_image_resource["depth"] = 5
+def test_validate_texture_metadata_no_depth_stride(raw_texture_resource: meta.TextureResource):
+    mip_level = raw_texture_resource["mip_levels"][0]
+    raw_texture_resource["flags"] = ["texture3d"]
+    raw_texture_resource["depth"] = 5
 
     if "depth_stride" in mip_level:
         del mip_level["depth_stride"]
 
     with pytest.raises(ValueError):
-        meta.validate_image_metadata(raw_image_resource)
+        meta.validate_texture_metadata(raw_texture_resource)
 
 
-def test_validate_image_metadata_no_layer_stride(raw_image_resource: meta.ImageResource):
-    mip_level = raw_image_resource["mip_levels"][0]
-    raw_image_resource["flags"] = ["image3d"]
+def test_validate_texture_metadata_no_layer_stride(raw_texture_resource: meta.TextureResource):
+    mip_level = raw_texture_resource["mip_levels"][0]
+    raw_texture_resource["flags"] = ["texture3d"]
     mip_level["layers"] = ["a", "b"]
 
     if "layer_stride" in mip_level:
         del mip_level["layer_stride"]
 
     with pytest.raises(ValueError):
-        meta.validate_image_metadata(raw_image_resource)
+        meta.validate_texture_metadata(raw_texture_resource)
 
 
-def test_validate_image_metadata_no_row_stride(raw_image_resource: meta.ImageResource):
-    mip_level = raw_image_resource["mip_levels"][0]
-    raw_image_resource["flags"] = ["image2d"]
+def test_validate_texture_metadata_no_row_stride(raw_texture_resource: meta.TextureResource):
+    mip_level = raw_texture_resource["mip_levels"][0]
+    raw_texture_resource["flags"] = ["texture2d"]
 
     if "row_stride" in mip_level:
         del mip_level["row_stride"]
 
     with pytest.raises(ValueError):
-        meta.validate_image_metadata(raw_image_resource)
+        meta.validate_texture_metadata(raw_texture_resource)
 
 
-def test_validate_image_metadata_no_height(raw_image_resource: meta.ImageResource):
-    raw_image_resource["flags"] = ["image2d"]
+def test_validate_texture_metadata_no_height(raw_texture_resource: meta.TextureResource):
+    raw_texture_resource["flags"] = ["texture2d"]
 
-    if "height" in raw_image_resource:
-        del raw_image_resource["height"]
+    if "height" in raw_texture_resource:
+        del raw_texture_resource["height"]
 
     with pytest.raises(ValueError):
-        meta.validate_image_metadata(raw_image_resource)
+        meta.validate_texture_metadata(raw_texture_resource)
 
 
-def test_validate_image_metadata_1d_image(raw_image_resource: meta.ImageResource):
-    mip_level = raw_image_resource["mip_levels"][0]
-    raw_image_resource["flags"] = ["image1d"]
+def test_validate_texture_metadata_1d_texture(raw_texture_resource: meta.TextureResource):
+    mip_level = raw_texture_resource["mip_levels"][0]
+    raw_texture_resource["flags"] = ["texture1d"]
 
     for field in ("depth", "height"):
-        if field in raw_image_resource:
-            del raw_image_resource[field]
+        if field in raw_texture_resource:
+            del raw_texture_resource[field]
 
     if "row_stride" in mip_level:
         del mip_level["row_stride"]
 
-    meta.validate_image_metadata(raw_image_resource)
+    meta.validate_texture_metadata(raw_texture_resource)
