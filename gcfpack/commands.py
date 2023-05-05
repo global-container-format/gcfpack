@@ -2,7 +2,7 @@
 
 import click
 
-from . import gcf, meta
+from . import meta, serialization
 
 
 def initialise_sample_description_file(path: str):
@@ -38,5 +38,5 @@ def create_gcf_file(description_path: str, gcf_path: str):
     with open(description_path, "r", encoding="utf-8") as description_file:
         description = meta.load_metadata(description_file)
 
-    header, resources = gcf.create_gcf_file(description)
-    gcf.write_gcf_file(gcf_path, header, resources)
+    header, resources = serialization.create_gcf_file(description)
+    serialization.write_gcf_file(gcf_path, header, resources)
