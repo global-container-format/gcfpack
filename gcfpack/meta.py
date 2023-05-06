@@ -74,27 +74,28 @@ def create_sample_metadata_object() -> Metadata:
     :return: An example description object to simplify manual description creation.
     """
 
-    blob_resource_example = cast(
-        BlobResource, {"type": "blob", "file_path": "my-file.bin", "supercompression_scheme": "deflate"}
-    )
+    blob_resource_example: BlobResource = {
+        "type": "blob",
+        "file_path": "my-file.bin",
+        "supercompression_scheme": "deflate",
+    }
 
-    tex_resource_example = cast(
-        TextureResource,
-        {
-            "type": "texture",
-            "format": "R8_UNORM",
-            "width": 100,
-            "height": 100,
-            "flags": ["texture2d"],
-            "supercompression_scheme": "none",
-            "mip_levels": [
-                {
-                    "row_stride": 10,
-                    "layers": ["only-layer.bin"],
-                }
-            ],
-        },
-    )
+    tex_resource_example: TextureResource = {
+        "type": "texture",
+        "format": "R8_UNORM",
+        "base_width": 100,
+        "base_height": 100,
+        "flags": ["texture2d"],
+        "supercompression_scheme": "none",
+        "layer_count": 1,
+        "texture_group": 0,
+        "mip_levels": [
+            {
+                "row_stride": 10,
+                "layers": ["only-layer.bin"],
+            }
+        ],
+    }
 
     return {
         "header": {"version": 2, "flags": []},
@@ -134,16 +135,16 @@ def validate_texture_metadata(res: TextureResource):
         raise ValueError("Texture resources must have an associated format.", res)
 
     if "texture1d" not in res["flags"]:
-        if not "height" in res:
-            raise ValueError("2D and 3D texture resources require height to be specified.", res)
+        if not "base_height" in res:
+            raise ValueError("2D and 3D texture resources require base height to be specified.", res)
 
         for mip in res["mip_levels"]:
             if not "row_stride" in mip:
                 raise ValueError("2D and 3D texture resources require row stride to be specified.", res)
 
     if "texture3d" in res["flags"]:
-        if not "depth" in res:
-            raise ValueError("3D texture resources require depth to be specified.", res)
+        if not "base_depth" in res:
+            raise ValueError("3D texture resources require base depth to be specified.", res)
 
         for mip in res["mip_levels"]:
             if not "depth_stride" in mip:

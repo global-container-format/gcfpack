@@ -28,11 +28,13 @@ def raw_blob_resource():
 def raw_texture_resource():
     return {
         "type": "texture",
-        "width": 100,
-        "height": 100,
+        "base_width": 100,
+        "base_height": 100,
         "flags": ["texture2d"],
         "supercompression_scheme": "none",
         "format": "R8_UNORM",
+        "layer_count": 1,
+        "texture_group": 0,
         "mip_levels": [
             {
                 "row_stride": 10,
@@ -86,9 +88,11 @@ def tmp_texture_file_texture_description(tmp_texture_file):
     return {
         "format": "R8_UNORM",
         "flags": ["texture2d"],
-        "width": 1,
-        "height": 1,
+        "base_width": 1,
+        "base_height": 1,
         "supercompression_scheme": "none",
+        "layer_count": 1,
+        "texture_group": 0,
         "type": "texture",
         "mip_levels": [{"row_stride": 1, "layers": [tmp_texture_file]}],
     }

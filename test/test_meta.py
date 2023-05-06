@@ -153,8 +153,8 @@ def test_validate_texture_metadata_no_row_stride(raw_texture_resource: meta.Text
 def test_validate_texture_metadata_no_height(raw_texture_resource: meta.TextureResource):
     raw_texture_resource["flags"] = ["texture2d"]
 
-    if "height" in raw_texture_resource:
-        del raw_texture_resource["height"]
+    if "base_height" in raw_texture_resource:
+        del raw_texture_resource["base_height"]
 
     with pytest.raises(ValueError):
         meta.validate_texture_metadata(raw_texture_resource)
