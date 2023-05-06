@@ -49,9 +49,10 @@ class TextureResource(BaseResource):
     """An texture resource representation."""
 
     type: Literal["texture"]
-    width: int
-    height: NotRequired[int]
-    depth: NotRequired[int]
+    base_width: int
+    base_height: NotRequired[int]
+    base_depth: NotRequired[int]
+    layer_count: int
     flags: List[TextureFlagValue]
     mip_levels: List[TextureMipLevel]
     texture_group: int

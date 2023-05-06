@@ -38,5 +38,7 @@ def create_gcf_file(description_path: str, gcf_path: str):
     with open(description_path, "r", encoding="utf-8") as description_file:
         description = meta.load_metadata(description_file)
 
-    header, resources = serialization.create_gcf_file(description)
-    serialization.write_gcf_file(gcf_path, header, resources)
+    gcf_data = serialization.create_gcf_file(description)
+
+    with open(gcf_path, "wb") as gcf_file:
+        gcf_file.write(gcf_data)

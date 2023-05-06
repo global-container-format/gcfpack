@@ -3,8 +3,8 @@ from typing import cast
 import pytest
 from gcf import Header, ResourceType, SupercompressionScheme
 from gcf.blob import BlobResource
-from gcf.texture import TextureResource
 from gcf.resource_format import Format
+from gcf.texture import TextureResource
 
 from gcfpack import meta, serialization
 
@@ -13,8 +13,8 @@ from .fixtures import (
     gcf_description,
     raw_blob_resource,
     raw_container_flag_values,
-    raw_texture_resource,
     raw_supercompression_scheme_values,
+    raw_texture_resource,
     tmp_texture_file,
     tmp_texture_file2,
     tmp_texture_file_blob_description,
