@@ -84,7 +84,7 @@ def tmp_texture_file2():
 
 
 @pytest.fixture
-def tmp_texture_file_texture_description(tmp_texture_file):
+def tmp_texture_description(tmp_texture_file):
     return {
         "format": "R8_UNORM",
         "flags": ["texture2d"],
@@ -99,7 +99,7 @@ def tmp_texture_file_texture_description(tmp_texture_file):
 
 
 @pytest.fixture
-def tmp_texture_file_blob_description(tmp_texture_file):
+def tmp_blob_description(tmp_texture_file):
     return {"type": "blob", "file_path": tmp_texture_file, "supercompression_scheme": "none"}
 
 

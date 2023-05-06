@@ -18,7 +18,7 @@ SuperCompressionScheme = Union[Literal["zlib"], Literal["deflate"], Literal["non
 class Header(TypedDict):
     """GCF header representation."""
 
-    version: Literal[2]
+    version: Literal[3]
     flags: NotRequired[List[GcfFlagValue]]
 
 
@@ -98,7 +98,7 @@ def create_sample_metadata_object() -> Metadata:
     }
 
     return {
-        "header": {"version": 2, "flags": []},
+        "header": {"version": 3, "flags": []},
         "resources": [blob_resource_example, tex_resource_example],
     }
 

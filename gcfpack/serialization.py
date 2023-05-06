@@ -1,6 +1,6 @@
 """GCF file packaging."""
 
-from typing import Callable, Dict, Iterable, Union, cast
+from typing import Callable, Dict, Iterable, Union, cast, List
 
 from gcf import ContainerFlags, Format, Header, ResourceType, SupercompressionScheme
 from gcf import blob as gcfblob
@@ -8,6 +8,7 @@ from gcf import compression
 from gcf import header as gcfheader
 from gcf import make_blob_resource_descriptor
 from gcf import texture as gcftex
+from gcf import util as gcfutil
 
 from .meta import BlobResource as RawBlobResource
 from .meta import GcfFlagValue as RawContainerFlags
@@ -130,15 +131,15 @@ def create_texture_resource(raw: RawResource) -> bytes:
     format_ = deserialize_format(tex_resource["format"])
     supercompression_scheme = deserialize_supercompression_scheme(tex_resource["supercompression_scheme"])
     base_width = tex_resource["base_width"]
-    base_height = tex_resource["base_height"]
-    base_depth = tex_resource["base_depth"]
+    base_height = tex_resource.get("base_height", 1)
+    base_depth = tex_resource.get("base_depth", 1)
     layer_count = tex_resource["layer_count"]
     texture_group = tex_resource["texture_group"]
     flags = deserialize_texture_flags(tex_resource["flags"])
-    level_collection = []
+    level_collection: List[bytes] = []
 
-    for level in tex_resource["mip_levels"]:
-        level_collection.append(create_texture_mip_level(tex_resource, level))
+    for level_index, level in enumerate(tex_resource["mip_levels"]):
+        level_collection.append(create_texture_mip_level(tex_resource, level, level_index))
 
     data = b"".join(level_collection)
 
@@ -158,12 +159,12 @@ def create_texture_resource(raw: RawResource) -> bytes:
     return gcftex.serialize_texture_resource_descriptor(descriptor) + data
 
 
-def create_texture_mip_level(tex_resource: RawTextureResource, level: RawTextureMipLevel) -> bytes:
+def create_texture_mip_level(tex_resource: RawTextureResource, level: RawTextureMipLevel, level_index: int) -> bytes:
     """Create a GCF texture mip level from its raw description."""
 
     supercompression_scheme = deserialize_supercompression_scheme(tex_resource["supercompression_scheme"])
     expected_layer_count = tex_resource["layer_count"]
-    actual_layer_count = level["layers"]
+    actual_layer_count = len(level["layers"])
     layer_collection = []
 
     if expected_layer_count != actual_layer_count:
@@ -173,15 +174,27 @@ def create_texture_mip_level(tex_resource: RawTextureResource, level: RawTexture
         with open(layer, "rb") as layer_file:
             layer_collection.append(layer_file.read())
 
+    for layer_index, layer in enumerate(layer_collection[1:]):
+        if len(layer) != len(layer_collection[0]):
+            raise ValueError(f"Layer {layer_index} in texture mip_level {level_index} has different size.")
+
     uncompressed_data_size = sum(map(len, layer_collection))
     data = gcftex.serialize_mip_level_data(layer_collection, supercompression_scheme)
+
+    base_width = tex_resource["base_width"]
+    base_height = tex_resource.get("base_height", 1)
+    base_depth = tex_resource.get("base_depth", 1)
+
+    level_width, level_height, level_depth = gcfutil.compute_mip_level_size(level_index, base_width, base_height, base_depth)
+    slice_stride = level_width * level_height
+    layer_stride = slice_stride * level_depth
 
     descriptor: gcftex.MipLevelDescriptor = {
         "compressed_size": len(data),
         "uncompressed_size": uncompressed_data_size,
-        "row_stride": level["row_stride"],
-        "slice_stride": level["slice_stride"],
-        "layer_stride": level["layer_stride"],
+        "row_stride": level.get("row_stride", level_width),
+        "slice_stride": level.get("slice_stride", slice_stride),
+        "layer_stride": level.get("layer_stride", layer_stride),
     }
 
     return gcftex.serialize_mip_level_descriptor(descriptor) + data
