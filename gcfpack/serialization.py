@@ -36,12 +36,12 @@ def deserialize_container_flags(raw: Iterable[RawContainerFlags]) -> ContainerFl
     return result
 
 
-def deserialize_texture_flags(raw: Iterable[RawTextureFlagValue]) -> gcftex.TextureFlags:
+def deserialize_texture_flags(raw: Iterable[str]) -> gcftex.TextureFlags:
     """Deserialize a sequence of texture flags."""
 
     result: gcftex.TextureFlags = gcftex.TextureFlags(0)
 
-    flag_map: Dict[RawTextureFlagValue, gcftex.TextureFlags] = {
+    flag_map: Dict[str, gcftex.TextureFlags] = {
         "texture1d": gcftex.TextureFlags.TEXTURE_1D,
         "texture2d": gcftex.TextureFlags.TEXTURE_2D,
         "texture3d": gcftex.TextureFlags.TEXTURE_3D,
@@ -165,7 +165,7 @@ def create_texture_mip_level(tex_resource: RawTextureResource, level: RawTexture
     supercompression_scheme = deserialize_supercompression_scheme(tex_resource["supercompression_scheme"])
     expected_layer_count = tex_resource["layer_count"]
     actual_layer_count = len(level["layers"])
-    layer_collection = []
+    layer_collection: List[bytes] = []
 
     if expected_layer_count != actual_layer_count:
         raise ValueError(f"Layer count is {expected_layer_count} but mip level has {actual_layer_count} layers.")
@@ -174,8 +174,8 @@ def create_texture_mip_level(tex_resource: RawTextureResource, level: RawTexture
         with open(layer, "rb") as layer_file:
             layer_collection.append(layer_file.read())
 
-    for layer_index, layer in enumerate(layer_collection[1:]):
-        if len(layer) != len(layer_collection[0]):
+    for layer_index, layer_data in enumerate(layer_collection[1:]):
+        if len(layer_data) != len(layer_collection[0]):
             raise ValueError(f"Layer {layer_index} in texture mip_level {level_index} has different size.")
 
     uncompressed_data_size = sum(map(len, layer_collection))

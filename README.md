@@ -59,7 +59,7 @@ pytest test
 To get a coverage report, run:
 
 ```bash
-pytest --cov=gcfpack test
+pytest --cov=gcfpack --cov-report term-missing test
 ```
 
 ### Documentation

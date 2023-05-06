@@ -115,27 +115,29 @@ def test_validate_texture_metadata_no_depth(raw_texture_resource: meta.TextureRe
         meta.validate_texture_metadata(raw_texture_resource)
 
 
-def test_validate_texture_metadata_no_depth_stride(raw_texture_resource: meta.TextureResource):
+def test_validate_texture_metadata_no_slice_stride(raw_texture_resource: meta.TextureResource):
     mip_level = raw_texture_resource["mip_levels"][0]
     raw_texture_resource["flags"] = ["texture3d"]
-    raw_texture_resource["depth"] = 5
+    raw_texture_resource["base_depth"] = 5
 
-    if "depth_stride" in mip_level:
-        del mip_level["depth_stride"]
+    if "slice_stride" in mip_level:
+        del mip_level["slice_stride"]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="slice stride"):
         meta.validate_texture_metadata(raw_texture_resource)
 
 
 def test_validate_texture_metadata_no_layer_stride(raw_texture_resource: meta.TextureResource):
     mip_level = raw_texture_resource["mip_levels"][0]
     raw_texture_resource["flags"] = ["texture3d"]
+    raw_texture_resource["base_depth"] = 5
     mip_level["layers"] = ["a", "b"]
+    mip_level["slice_stride"] = 1
 
     if "layer_stride" in mip_level:
         del mip_level["layer_stride"]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="layer stride"):
         meta.validate_texture_metadata(raw_texture_resource)
 
 
@@ -146,7 +148,7 @@ def test_validate_texture_metadata_no_row_stride(raw_texture_resource: meta.Text
     if "row_stride" in mip_level:
         del mip_level["row_stride"]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="row stride"):
         meta.validate_texture_metadata(raw_texture_resource)
 
 
@@ -156,7 +158,7 @@ def test_validate_texture_metadata_no_height(raw_texture_resource: meta.TextureR
     if "base_height" in raw_texture_resource:
         del raw_texture_resource["base_height"]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="base height"):
         meta.validate_texture_metadata(raw_texture_resource)
 
 

@@ -147,8 +147,8 @@ def validate_texture_metadata(res: TextureResource):
             raise ValueError("3D texture resources require base depth to be specified.", res)
 
         for mip in res["mip_levels"]:
-            if not "depth_stride" in mip:
-                raise ValueError("3D texture resources require depth stride to be specified.", res)
+            if not "slice_stride" in mip:
+                raise ValueError("3D texture resources require slice stride to be specified.", res)
 
     for mip in res["mip_levels"]:
         if len(mip["layers"]) > 1 and not "layer_stride" in mip:
