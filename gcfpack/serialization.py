@@ -1,6 +1,6 @@
 """GCF file packaging."""
 
-from typing import Callable, Dict, Iterable, Union, cast, List
+from typing import Callable, Dict, Iterable, List, Union, cast
 
 from gcf import ContainerFlags, Format, Header, ResourceType, SupercompressionScheme
 from gcf import blob as gcfblob
@@ -11,18 +11,15 @@ from gcf import texture as gcftex
 from gcf import util as gcfutil
 
 from .meta import BlobResource as RawBlobResource
-from .meta import GcfFlagValue as RawContainerFlags
 from .meta import Metadata as RawGcfDescription
 from .meta import Resource as RawResource
-from .meta import SuperCompressionScheme as RawSupercompressionScheme
-from .meta import TextureFlagValue as RawTextureFlagValue
 from .meta import TextureMipLevel as RawTextureMipLevel
 from .meta import TextureResource as RawTextureResource
 
 CreateResourceFunction = Callable[[RawResource], bytes]
 
 
-def deserialize_container_flags(raw: Iterable[RawContainerFlags]) -> ContainerFlags:
+def deserialize_container_flags(raw: Iterable[str]) -> ContainerFlags:
     """Deserialize a sequence of container flags."""
 
     result: ContainerFlags = ContainerFlags(0)
@@ -56,7 +53,7 @@ def deserialize_texture_flags(raw: Iterable[str]) -> gcftex.TextureFlags:
     return result
 
 
-def deserialize_supercompression_scheme(raw: RawSupercompressionScheme) -> SupercompressionScheme:
+def deserialize_supercompression_scheme(raw: str) -> SupercompressionScheme:
     """Deserialize a supercompression scheme value."""
 
     if raw == "none":
@@ -74,7 +71,7 @@ def deserialize_supercompression_scheme(raw: RawSupercompressionScheme) -> Super
     raise ValueError("Invalid supercompression scheme", raw)
 
 
-def get_resource_type(res: RawResource) -> ResourceType:
+def get_resource_type(res: Union[RawResource, dict]) -> ResourceType:
     """Get the resource type from a raw resource."""
 
     res_type = res["type"]
@@ -159,6 +156,7 @@ def create_texture_resource(raw: RawResource) -> bytes:
     return gcftex.serialize_texture_resource_descriptor(descriptor) + data
 
 
+# pylint: disable=too-many-locals
 def create_texture_mip_level(tex_resource: RawTextureResource, level: RawTextureMipLevel, level_index: int) -> bytes:
     """Create a GCF texture mip level from its raw description."""
 
@@ -185,7 +183,9 @@ def create_texture_mip_level(tex_resource: RawTextureResource, level: RawTexture
     base_height = tex_resource.get("base_height", 1)
     base_depth = tex_resource.get("base_depth", 1)
 
-    level_width, level_height, level_depth = gcfutil.compute_mip_level_size(level_index, base_width, base_height, base_depth)
+    level_width, level_height, level_depth = gcfutil.compute_mip_level_size(
+        level_index, base_width, base_height, base_depth
+    )
     slice_stride = level_width * level_height
     layer_stride = slice_stride * level_depth
 

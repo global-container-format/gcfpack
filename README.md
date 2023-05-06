@@ -45,7 +45,7 @@ black .
 pylint gcfpack
 
 # Validate typing
-mypy gcfpack
+mypy --check-untyped-defs gcfpack test
 ```
 
 ### Testing

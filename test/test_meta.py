@@ -1,5 +1,6 @@
 import io
 import json
+from typing import Any, Dict, cast
 
 import pydantic
 import pytest
@@ -14,7 +15,7 @@ def test_create_sample_metadata_object():
 
     model = pydantic.create_model_from_typeddict(meta.Metadata)
     sample_meta = meta.create_sample_metadata_object()
-    validation_errors = pydantic.validate_model(model, sample_meta)[2]
+    validation_errors = pydantic.validate_model(model, cast(Dict[str, Any], sample_meta))[2]
 
     assert not validation_errors
 
@@ -103,15 +104,15 @@ def test_validate_texture_metadata_too_many_texture_flags(raw_texture_resource: 
         meta.validate_texture_metadata(raw_texture_resource)
 
 
-def test_validate_texture_metadata_no_depth(raw_texture_resource: meta.TextureResource):
+def test_validate_texture_metadata_no_base_depth(raw_texture_resource: meta.TextureResource):
     mip_level = raw_texture_resource["mip_levels"][0]
     raw_texture_resource["flags"] = ["texture3d"]
-    mip_level["depth_stride"] = 5
+    mip_level["slice_stride"] = 5
 
-    if "depth" in raw_texture_resource:
-        del raw_texture_resource["depth"]
+    if "base_depth" in raw_texture_resource:
+        del raw_texture_resource["base_depth"]
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="base depth"):
         meta.validate_texture_metadata(raw_texture_resource)
 
 
@@ -166,9 +167,9 @@ def test_validate_texture_metadata_1d_texture(raw_texture_resource: meta.Texture
     mip_level = raw_texture_resource["mip_levels"][0]
     raw_texture_resource["flags"] = ["texture1d"]
 
-    for field in ("depth", "height"):
+    for field in ("base_depth", "base_height"):
         if field in raw_texture_resource:
-            del raw_texture_resource[field]
+            del raw_texture_resource[field]  # type: ignore
 
     if "row_stride" in mip_level:
         del mip_level["row_stride"]

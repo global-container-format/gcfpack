@@ -2,9 +2,10 @@ from io import BytesIO
 from typing import cast
 
 import pytest
-from gcf import Header, ResourceType, SupercompressionScheme, blob, texture, Format, deserialize_header, ContainerFlags
-from gcf.header import HEADER_SIZE
+from gcf import ContainerFlags, Format, Header, ResourceType, SupercompressionScheme, blob, deserialize_header
 from gcf import file as gcffile
+from gcf import texture
+from gcf.header import HEADER_SIZE
 
 from gcfpack import meta, serialization
 
@@ -15,10 +16,10 @@ from .fixtures import (
     raw_container_flag_values,
     raw_supercompression_scheme_values,
     raw_texture_resource,
-    tmp_texture_file,
-    tmp_texture_file2,
     tmp_blob_description,
     tmp_texture_description,
+    tmp_texture_file,
+    tmp_texture_file2,
 )
 
 
@@ -76,10 +77,10 @@ def test_create_texture_resource(tmp_texture_description):
 
     assert isinstance(raw_tex, bytes)
 
-    tex_descriptor = texture.deserialize_texture_resource_descriptor(raw_tex[:texture.TOTAL_DESCRIPTOR_SIZE])
-    tex_data = raw_tex[texture.TOTAL_DESCRIPTOR_SIZE:]
-    mip_level_descriptor = texture.deserialize_mip_level_descriptor(tex_data[:texture.MIP_LEVEL_SIZE])
-    mip_level_data = tex_data[texture.MIP_LEVEL_SIZE:]
+    tex_descriptor = texture.deserialize_texture_resource_descriptor(raw_tex[: texture.TOTAL_DESCRIPTOR_SIZE])
+    tex_data = raw_tex[texture.TOTAL_DESCRIPTOR_SIZE :]
+    mip_level_descriptor = texture.deserialize_mip_level_descriptor(tex_data[: texture.MIP_LEVEL_SIZE])
+    mip_level_data = tex_data[texture.MIP_LEVEL_SIZE :]
 
     assert tex_descriptor["mip_level_count"] == 1
     assert tex_descriptor["content_size"] == 1 + texture.MIP_LEVEL_SIZE
@@ -101,10 +102,10 @@ def test_create_texture_resource_multiple_layers(tmp_texture_description: meta.T
 
     assert isinstance(raw_tex, bytes)
 
-    tex_descriptor = texture.deserialize_texture_resource_descriptor(raw_tex[:texture.TOTAL_DESCRIPTOR_SIZE])
-    tex_data = raw_tex[texture.TOTAL_DESCRIPTOR_SIZE:]
-    mip_level_descriptor = texture.deserialize_mip_level_descriptor(tex_data[:texture.MIP_LEVEL_SIZE])
-    mip_level_data = tex_data[texture.MIP_LEVEL_SIZE:]
+    tex_descriptor = texture.deserialize_texture_resource_descriptor(raw_tex[: texture.TOTAL_DESCRIPTOR_SIZE])
+    tex_data = raw_tex[texture.TOTAL_DESCRIPTOR_SIZE :]
+    mip_level_descriptor = texture.deserialize_mip_level_descriptor(tex_data[: texture.MIP_LEVEL_SIZE])
+    mip_level_data = tex_data[texture.MIP_LEVEL_SIZE :]
 
     assert tex_descriptor["mip_level_count"] == 1
     assert tex_descriptor["content_size"] == 2 + texture.MIP_LEVEL_SIZE
@@ -125,8 +126,6 @@ def test_create_texture_resource_invalid_layer_count(tmp_texture_description):
         serialization.create_texture_resource(tmp_texture_description)
 
 
-
-
 def test_create_texture_resource_multiple_layers_different_size(
     tmp_texture_file2, tmp_texture_description: meta.TextureResource
 ):
@@ -144,8 +143,8 @@ def test_create_blob_resource(tmp_blob_description):
 
     assert isinstance(raw_blob, bytes)
 
-    descriptor = blob.deserialize_blob_descriptor(raw_blob[:blob.TOTAL_DESCRIPTOR_SIZE])
-    data = raw_blob[blob.TOTAL_DESCRIPTOR_SIZE:]
+    descriptor = blob.deserialize_blob_descriptor(raw_blob[: blob.TOTAL_DESCRIPTOR_SIZE])
+    data = raw_blob[blob.TOTAL_DESCRIPTOR_SIZE :]
 
     assert descriptor["content_size"] == 1
     assert descriptor["uncompressed_size"] == 1
