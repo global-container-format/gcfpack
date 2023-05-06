@@ -111,3 +111,112 @@ def empty_tmp_file():
     yield tmp.name
 
     os.unlink(tmp.name)
+
+
+@pytest.fixture
+def raw_texture_resource_no_format(raw_texture_resource):
+    del raw_texture_resource["format"]
+
+    return raw_texture_resource
+
+
+@pytest.fixture
+def raw_texture_resource_numeric_format(raw_texture_resource):
+    raw_texture_resource["format"] = 8
+
+    return raw_texture_resource
+
+
+@pytest.fixture
+def raw_texture_resource_empty_flags(raw_texture_resource):
+    raw_texture_resource["flags"] = []
+
+    return raw_texture_resource
+
+
+@pytest.fixture
+def raw_texture_resource_double_flag(raw_texture_resource):
+    raw_texture_resource["flags"] = ["texture1d", "texture1d"]
+
+    return raw_texture_resource
+
+
+@pytest.fixture
+def raw_texture_resource_too_many_flags(raw_texture_resource):
+    raw_texture_resource["flags"] = ["texture1d", "texture2d"]
+
+    return raw_texture_resource
+
+
+@pytest.fixture
+def raw_texture_resource_no_base_depth(raw_texture_resource):
+    mip_level = raw_texture_resource["mip_levels"][0]
+    raw_texture_resource["flags"] = ["texture3d"]
+    mip_level["slice_stride"] = 5
+
+    if "base_depth" in raw_texture_resource:
+        del raw_texture_resource["base_depth"]
+
+    return raw_texture_resource
+
+
+@pytest.fixture
+def raw_texture_resource_no_slice_stride(raw_texture_resource):
+    mip_level = raw_texture_resource["mip_levels"][0]
+    raw_texture_resource["flags"] = ["texture3d"]
+    raw_texture_resource["base_depth"] = 5
+
+    if "slice_stride" in mip_level:
+        del mip_level["slice_stride"]
+
+    return raw_texture_resource
+
+
+@pytest.fixture
+def raw_texture_resource_no_layer_stride(raw_texture_resource):
+    mip_level = raw_texture_resource["mip_levels"][0]
+    raw_texture_resource["flags"] = ["texture3d"]
+    raw_texture_resource["base_depth"] = 5
+    mip_level["layers"] = ["a", "b"]
+    mip_level["slice_stride"] = 1
+
+    if "layer_stride" in mip_level:
+        del mip_level["layer_stride"]
+
+    return raw_texture_resource
+
+
+@pytest.fixture
+def raw_texture_resource_no_row_stride(raw_texture_resource):
+    mip_level = raw_texture_resource["mip_levels"][0]
+    raw_texture_resource["flags"] = ["texture2d"]
+
+    if "row_stride" in mip_level:
+        del mip_level["row_stride"]
+
+    return raw_texture_resource
+
+
+@pytest.fixture
+def raw_texture_resource_no_height(raw_texture_resource):
+    raw_texture_resource["flags"] = ["texture2d"]
+
+    if "base_height" in raw_texture_resource:
+        del raw_texture_resource["base_height"]
+
+    return raw_texture_resource
+
+
+@pytest.fixture
+def raw_texture_resource_1d_texture(raw_texture_resource):
+    mip_level = raw_texture_resource["mip_levels"][0]
+    raw_texture_resource["flags"] = ["texture1d"]
+
+    for field in ("base_depth", "base_height"):
+        if field in raw_texture_resource:
+            del raw_texture_resource[field]  # type: ignore
+
+    if "row_stride" in mip_level:
+        del mip_level["row_stride"]
+
+    return raw_texture_resource

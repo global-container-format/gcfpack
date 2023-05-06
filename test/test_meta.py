@@ -7,7 +7,20 @@ import pytest
 
 from gcfpack import meta
 
-from .fixtures import raw_texture_resource
+from .fixtures import (
+    raw_texture_resource,
+    raw_texture_resource_no_format,
+    raw_texture_resource_numeric_format,
+    raw_texture_resource_empty_flags,
+    raw_texture_resource_no_slice_stride,
+    raw_texture_resource_no_base_depth,
+    raw_texture_resource_too_many_flags,
+    raw_texture_resource_double_flag,
+    raw_texture_resource_no_layer_stride,
+    raw_texture_resource_no_height,
+    raw_texture_resource_no_row_stride,
+    raw_texture_resource_1d_texture
+)
 
 
 def test_create_sample_metadata_object():
@@ -69,109 +82,55 @@ def test_validate_texture_metadata(raw_texture_resource: meta.TextureResource):
     meta.validate_texture_metadata(raw_texture_resource)
 
 
-def test_validate_texture_metadata_no_format(raw_texture_resource: meta.TextureResource):
-    del raw_texture_resource["format"]
-
+def test_validate_texture_metadata_no_format(raw_texture_resource_no_format: meta.TextureResource):
     with pytest.raises(ValueError):
-        meta.validate_texture_metadata(raw_texture_resource)
+        meta.validate_texture_metadata(raw_texture_resource_no_format)
 
 
-def test_validate_texture_metadata_empty_flags(raw_texture_resource: meta.TextureResource):
-    raw_texture_resource["flags"] = []
-
+def test_validate_texture_metadata_empty_flags(raw_texture_resource_empty_flags: meta.TextureResource):
     with pytest.raises(ValueError):
-        meta.validate_texture_metadata(raw_texture_resource)
+        meta.validate_texture_metadata(raw_texture_resource_empty_flags)
 
 
-def test_validate_texture_metadata_numeric_format(raw_texture_resource: meta.TextureResource):
-    raw_texture_resource["format"] = 8
-
+def test_validate_texture_metadata_numeric_format(raw_texture_resource_numeric_format: meta.TextureResource):
     # No exception upon success
-    meta.validate_texture_metadata(raw_texture_resource)
+    meta.validate_texture_metadata(raw_texture_resource_numeric_format)
 
 
-def test_validate_texture_metadata_double_flag(raw_texture_resource: meta.TextureResource):
-    raw_texture_resource["flags"] = ["texture1d", "texture1d"]
-
+def test_validate_texture_metadata_double_flag(raw_texture_resource_double_flag: meta.TextureResource):
     with pytest.raises(ValueError):
-        meta.validate_texture_metadata(raw_texture_resource)
+        meta.validate_texture_metadata(raw_texture_resource_double_flag)
 
 
-def test_validate_texture_metadata_too_many_texture_flags(raw_texture_resource: meta.TextureResource):
-    raw_texture_resource["flags"] = ["texture1d", "texture2d"]
-
+def test_validate_texture_metadata_too_many_texture_flags(raw_texture_resource_too_many_flags: meta.TextureResource):
     with pytest.raises(ValueError):
-        meta.validate_texture_metadata(raw_texture_resource)
+        meta.validate_texture_metadata(raw_texture_resource_too_many_flags)
 
 
-def test_validate_texture_metadata_no_base_depth(raw_texture_resource: meta.TextureResource):
-    mip_level = raw_texture_resource["mip_levels"][0]
-    raw_texture_resource["flags"] = ["texture3d"]
-    mip_level["slice_stride"] = 5
-
-    if "base_depth" in raw_texture_resource:
-        del raw_texture_resource["base_depth"]
-
+def test_validate_texture_metadata_no_base_depth(raw_texture_resource_no_base_depth: meta.TextureResource):
     with pytest.raises(ValueError, match="base depth"):
-        meta.validate_texture_metadata(raw_texture_resource)
+        meta.validate_texture_metadata(raw_texture_resource_no_base_depth)
 
 
-def test_validate_texture_metadata_no_slice_stride(raw_texture_resource: meta.TextureResource):
-    mip_level = raw_texture_resource["mip_levels"][0]
-    raw_texture_resource["flags"] = ["texture3d"]
-    raw_texture_resource["base_depth"] = 5
-
-    if "slice_stride" in mip_level:
-        del mip_level["slice_stride"]
-
+def test_validate_texture_metadata_no_slice_stride(raw_texture_resource_no_slice_stride: meta.TextureResource):
     with pytest.raises(ValueError, match="slice stride"):
-        meta.validate_texture_metadata(raw_texture_resource)
+        meta.validate_texture_metadata(raw_texture_resource_no_slice_stride)
 
 
-def test_validate_texture_metadata_no_layer_stride(raw_texture_resource: meta.TextureResource):
-    mip_level = raw_texture_resource["mip_levels"][0]
-    raw_texture_resource["flags"] = ["texture3d"]
-    raw_texture_resource["base_depth"] = 5
-    mip_level["layers"] = ["a", "b"]
-    mip_level["slice_stride"] = 1
-
-    if "layer_stride" in mip_level:
-        del mip_level["layer_stride"]
-
+def test_validate_texture_metadata_no_layer_stride(raw_texture_resource_no_layer_stride: meta.TextureResource):
     with pytest.raises(ValueError, match="layer stride"):
-        meta.validate_texture_metadata(raw_texture_resource)
+        meta.validate_texture_metadata(raw_texture_resource_no_layer_stride)
 
 
-def test_validate_texture_metadata_no_row_stride(raw_texture_resource: meta.TextureResource):
-    mip_level = raw_texture_resource["mip_levels"][0]
-    raw_texture_resource["flags"] = ["texture2d"]
-
-    if "row_stride" in mip_level:
-        del mip_level["row_stride"]
-
+def test_validate_texture_metadata_no_row_stride(raw_texture_resource_no_row_stride: meta.TextureResource):
     with pytest.raises(ValueError, match="row stride"):
-        meta.validate_texture_metadata(raw_texture_resource)
+        meta.validate_texture_metadata(raw_texture_resource_no_row_stride)
 
 
-def test_validate_texture_metadata_no_height(raw_texture_resource: meta.TextureResource):
-    raw_texture_resource["flags"] = ["texture2d"]
-
-    if "base_height" in raw_texture_resource:
-        del raw_texture_resource["base_height"]
-
+def test_validate_texture_metadata_no_height(raw_texture_resource_no_height: meta.TextureResource):
     with pytest.raises(ValueError, match="base height"):
-        meta.validate_texture_metadata(raw_texture_resource)
+        meta.validate_texture_metadata(raw_texture_resource_no_height)
 
 
-def test_validate_texture_metadata_1d_texture(raw_texture_resource: meta.TextureResource):
-    mip_level = raw_texture_resource["mip_levels"][0]
-    raw_texture_resource["flags"] = ["texture1d"]
-
-    for field in ("base_depth", "base_height"):
-        if field in raw_texture_resource:
-            del raw_texture_resource[field]  # type: ignore
-
-    if "row_stride" in mip_level:
-        del mip_level["row_stride"]
-
-    meta.validate_texture_metadata(raw_texture_resource)
+def test_validate_texture_metadata_1d_texture(raw_texture_resource_1d_texture: meta.TextureResource):
+    meta.validate_texture_metadata(raw_texture_resource_1d_texture)
