@@ -118,6 +118,15 @@ def test_create_texture_resource_multiple_layers(tmp_texture_description: meta.T
     assert mip_level_data == b"\xff\xff"
 
 
+def test_create_texture_resource_invalid_layer_count(tmp_texture_description):
+    tmp_texture_description["layer_count"] = 200
+
+    with pytest.raises(ValueError, match="Layer count"):
+        serialization.create_texture_resource(tmp_texture_description)
+
+
+
+
 def test_create_texture_resource_multiple_layers_different_size(
     tmp_texture_file2, tmp_texture_description: meta.TextureResource
 ):
@@ -171,3 +180,14 @@ def test_deserialize_format_numeric():
 
 def test_deserialize_format_enum():
     assert serialization.deserialize_format(Format.E5B9G9R9_UFLOAT_PACK32) == 123
+
+
+def test_deserialize_texture_flags():
+    valid_flags = ["texture1d", "texture2d", "texture3d"]
+    invalid_flags = valid_flags + ["invalid"]
+
+    # Will throw if invalid
+    serialization.deserialize_texture_flags(valid_flags)
+
+    with pytest.raises(ValueError):
+        serialization.deserialize_texture_flags(invalid_flags)
