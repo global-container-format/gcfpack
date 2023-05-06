@@ -220,3 +220,49 @@ def raw_texture_resource_1d_texture(raw_texture_resource):
         del mip_level["row_stride"]
 
     return raw_texture_resource
+
+
+@pytest.fixture
+def tmp_texture_description_multiple_layers(tmp_texture_description):
+    tmp_texture_description["layer_count"] = 2
+    mip_level = tmp_texture_description["mip_levels"][0]
+    mip_level["layers"].append(mip_level["layers"][0])  # Duplicate layer
+
+    return tmp_texture_description
+
+
+@pytest.fixture
+def tmp_texture_description_invalid_layer_count(tmp_texture_description):
+    tmp_texture_description["layer_count"] = 200
+
+    return tmp_texture_description
+
+
+@pytest.fixture
+def tmp_texture_description_multiple_layers_different_size(tmp_texture_description, tmp_texture_file2):
+    tmp_texture_description["layer_count"] = 2
+    mip_level = tmp_texture_description["mip_levels"][0]
+
+    mip_level["layers"].append(tmp_texture_file2)  # Layer data with different size
+
+    return tmp_texture_description
+
+
+@pytest.fixture
+def tmp_blob_and_texture_metadata(tmp_texture_description, tmp_blob_description):
+    description: meta.Metadata = {
+        "header": {"version": 3, "flags": ["unpadded"]},
+        "resources": [tmp_blob_description, tmp_texture_description],
+    }
+
+    return description
+
+
+@pytest.fixture
+def valid_texture_flags():
+    return ["texture1d", "texture2d", "texture3d"]
+
+
+@pytest.fixture
+def invalid_texture_flags(valid_texture_flags):
+    return valid_texture_flags + ["invalid"]

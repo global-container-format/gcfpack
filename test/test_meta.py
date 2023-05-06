@@ -9,17 +9,17 @@ from gcfpack import meta
 
 from .fixtures import (
     raw_texture_resource,
-    raw_texture_resource_no_format,
-    raw_texture_resource_numeric_format,
-    raw_texture_resource_empty_flags,
-    raw_texture_resource_no_slice_stride,
-    raw_texture_resource_no_base_depth,
-    raw_texture_resource_too_many_flags,
+    raw_texture_resource_1d_texture,
     raw_texture_resource_double_flag,
-    raw_texture_resource_no_layer_stride,
+    raw_texture_resource_empty_flags,
+    raw_texture_resource_no_base_depth,
+    raw_texture_resource_no_format,
     raw_texture_resource_no_height,
+    raw_texture_resource_no_layer_stride,
     raw_texture_resource_no_row_stride,
-    raw_texture_resource_1d_texture
+    raw_texture_resource_no_slice_stride,
+    raw_texture_resource_numeric_format,
+    raw_texture_resource_too_many_flags,
 )
 
 

@@ -2,24 +2,29 @@ from io import BytesIO
 from typing import cast
 
 import pytest
-from gcf import ContainerFlags, Format, Header, ResourceType, SupercompressionScheme, blob, deserialize_header
+from gcf import ContainerFlags, Format, ResourceType, blob, deserialize_header
 from gcf import file as gcffile
 from gcf import texture
-from gcf.header import HEADER_SIZE
 
 from gcfpack import meta, serialization
 
 from .fixtures import (
     empty_tmp_file,
     gcf_description,
+    invalid_texture_flags,
     raw_blob_resource,
     raw_container_flag_values,
     raw_supercompression_scheme_values,
     raw_texture_resource,
+    tmp_blob_and_texture_metadata,
     tmp_blob_description,
     tmp_texture_description,
+    tmp_texture_description_invalid_layer_count,
+    tmp_texture_description_multiple_layers,
+    tmp_texture_description_multiple_layers_different_size,
     tmp_texture_file,
     tmp_texture_file2,
+    valid_texture_flags,
 )
 
 
@@ -94,11 +99,8 @@ def test_create_texture_resource(tmp_texture_description):
     assert mip_level_data == b"\xff"
 
 
-def test_create_texture_resource_multiple_layers(tmp_texture_description: meta.TextureResource):
-    tmp_texture_description["layer_count"] = 2
-    mip_level = tmp_texture_description["mip_levels"][0]
-    mip_level["layers"].append(mip_level["layers"][0])  # Duplicate layer
-    raw_tex = serialization.create_texture_resource(tmp_texture_description)
+def test_create_texture_resource_multiple_layers(tmp_texture_description_multiple_layers: meta.TextureResource):
+    raw_tex = serialization.create_texture_resource(tmp_texture_description_multiple_layers)
 
     assert isinstance(raw_tex, bytes)
 
@@ -119,23 +121,16 @@ def test_create_texture_resource_multiple_layers(tmp_texture_description: meta.T
     assert mip_level_data == b"\xff\xff"
 
 
-def test_create_texture_resource_invalid_layer_count(tmp_texture_description):
-    tmp_texture_description["layer_count"] = 200
-
+def test_create_texture_resource_invalid_layer_count(tmp_texture_description_invalid_layer_count):
     with pytest.raises(ValueError, match="Layer count"):
-        serialization.create_texture_resource(tmp_texture_description)
+        serialization.create_texture_resource(tmp_texture_description_invalid_layer_count)
 
 
 def test_create_texture_resource_multiple_layers_different_size(
-    tmp_texture_file2, tmp_texture_description: meta.TextureResource
+    tmp_texture_description_multiple_layers_different_size: meta.TextureResource,
 ):
-    tmp_texture_description["layer_count"] = 2
-    mip_level = tmp_texture_description["mip_levels"][0]
-
-    mip_level["layers"].append(tmp_texture_file2)  # Layer data with different size
-
     with pytest.raises(ValueError):
-        serialization.create_texture_resource(tmp_texture_description)
+        serialization.create_texture_resource(tmp_texture_description_multiple_layers_different_size)
 
 
 def test_create_blob_resource(tmp_blob_description):
@@ -151,13 +146,8 @@ def test_create_blob_resource(tmp_blob_description):
     assert data == b"\xff"
 
 
-def test_create_gcf_file(tmp_texture_description, tmp_blob_description):
-    description: meta.Metadata = {
-        "header": {"version": 3, "flags": ["unpadded"]},
-        "resources": [tmp_blob_description, tmp_texture_description],
-    }
-
-    raw_gcf = serialization.create_gcf_file(description)
+def test_create_gcf_file(tmp_blob_and_texture_metadata: meta.Metadata):
+    raw_gcf = serialization.create_gcf_file(tmp_blob_and_texture_metadata)
     test_file = BytesIO(raw_gcf)
     header = gcffile.read_header(test_file)
     res_list = []
@@ -181,12 +171,9 @@ def test_deserialize_format_enum():
     assert serialization.deserialize_format(Format.E5B9G9R9_UFLOAT_PACK32) == 123
 
 
-def test_deserialize_texture_flags():
-    valid_flags = ["texture1d", "texture2d", "texture3d"]
-    invalid_flags = valid_flags + ["invalid"]
-
+def test_deserialize_texture_flags(valid_texture_flags, invalid_texture_flags):
     # Will throw if invalid
-    serialization.deserialize_texture_flags(valid_flags)
+    serialization.deserialize_texture_flags(valid_texture_flags)
 
     with pytest.raises(ValueError):
-        serialization.deserialize_texture_flags(invalid_flags)
+        serialization.deserialize_texture_flags(invalid_texture_flags)
