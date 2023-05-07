@@ -273,3 +273,28 @@ def valid_texture_flags():
 @pytest.fixture
 def invalid_texture_flags(valid_texture_flags):
     return valid_texture_flags + ["invalid"]
+
+
+@pytest.fixture
+def sample_texture_metadata_object():
+    return {
+        "header": {"version": 3, "flags": []},
+        "resources": [
+            {
+                "type": "texture",
+                "format": "R8_UNORM",
+                "base_width": 100,
+                "base_height": 100,
+                "flags": ["texture2d"],
+                "supercompression_scheme": "none",
+                "layer_count": 1,
+                "texture_group": 0,
+                "mip_levels": [
+                    {
+                        "row_stride": 10,
+                        "layers": ["only-layer.bin"],
+                    }
+                ],
+            }
+        ],
+    }

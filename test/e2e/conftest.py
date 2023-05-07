@@ -2,7 +2,6 @@ import json
 import sys
 from os import unlink
 from tempfile import NamedTemporaryFile
-from typing import Tuple
 
 import pytest
 

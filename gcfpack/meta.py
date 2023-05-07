@@ -6,7 +6,7 @@ GCF metadata (aka description) files.
 
 import json
 from functools import reduce
-from typing import Any, List, Literal, NotRequired, TextIO, TypedDict, Union, cast
+from typing import Any, Literal, NotRequired, TextIO, TypedDict, Union, cast
 
 import pydantic
 
@@ -19,7 +19,7 @@ class Header(TypedDict):
     """GCF header representation."""
 
     version: Literal[3]
-    flags: NotRequired[List[GcfFlagValue]]
+    flags: NotRequired[list[GcfFlagValue]]
 
 
 class BaseResource(TypedDict):
@@ -42,7 +42,7 @@ class TextureMipLevel(TypedDict):
     row_stride: NotRequired[int]
     slice_stride: NotRequired[int]
     layer_stride: NotRequired[int]
-    layers: List[str]
+    layers: list[str]
 
 
 class TextureResource(BaseResource):
@@ -53,8 +53,8 @@ class TextureResource(BaseResource):
     base_height: NotRequired[int]
     base_depth: NotRequired[int]
     layer_count: int
-    flags: List[TextureFlagValue]
-    mip_levels: List[TextureMipLevel]
+    flags: list[TextureFlagValue]
+    mip_levels: list[TextureMipLevel]
     texture_group: int
 
 
@@ -65,7 +65,7 @@ class Metadata(TypedDict):
     """A GCF description object."""
 
     header: Header
-    resources: List[Resource]
+    resources: list[Resource]
 
 
 def create_sample_metadata_object() -> Metadata:

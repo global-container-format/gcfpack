@@ -57,6 +57,11 @@ def test_validate_metadata():
     meta.validate_metadata(sample_meta)
 
 
+def test_validate_metadata_texture_only(sample_texture_metadata_object):
+    # No exception upon success
+    meta.validate_metadata(sample_texture_metadata_object)
+
+
 def test_validate_metadata_invalid():
     with pytest.raises(ValueError):
         meta.validate_metadata({})

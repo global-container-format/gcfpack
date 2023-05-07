@@ -2,10 +2,9 @@
 
 import json
 from subprocess import check_call
-from typing import Tuple
 
 
-def test_init_w_output(gcfpack_invoke_cmdline_w_options: Tuple[str]):
+def test_init_w_output(gcfpack_invoke_cmdline_w_options: tuple[str]):
     """Test a JSON file is created."""
 
     output_file = gcfpack_invoke_cmdline_w_options[-1]

@@ -1,6 +1,6 @@
 """GCF file packaging."""
 
-from typing import Callable, Dict, Iterable, List, Union, cast
+from typing import Callable, Dict, Iterable, Union, cast
 
 from gcf import ContainerFlags, Format, Header, ResourceType, SupercompressionScheme
 from gcf import blob as gcfblob
@@ -133,7 +133,7 @@ def create_texture_resource(raw: RawResource) -> bytes:
     layer_count = tex_resource["layer_count"]
     texture_group = tex_resource["texture_group"]
     flags = deserialize_texture_flags(tex_resource["flags"])
-    level_collection: List[bytes] = []
+    level_collection: list[bytes] = []
 
     for level_index, level in enumerate(tex_resource["mip_levels"]):
         level_collection.append(create_texture_mip_level(tex_resource, level, level_index))
@@ -163,7 +163,7 @@ def create_texture_mip_level(tex_resource: RawTextureResource, level: RawTexture
     supercompression_scheme = deserialize_supercompression_scheme(tex_resource["supercompression_scheme"])
     expected_layer_count = tex_resource["layer_count"]
     actual_layer_count = len(level["layers"])
-    layer_collection: List[bytes] = []
+    layer_collection: list[bytes] = []
 
     if expected_layer_count != actual_layer_count:
         raise ValueError(f"Layer count is {expected_layer_count} but mip level has {actual_layer_count} layers.")
