@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "gcfpack"
 description = "GCF file packer."
-version = "1.0.4"
+version = "2.0.0"
 readme = "README.md"
 license = {file = "LICENSE"}
 authors = [{ name = "Alfredo Mungo" }]
@@ -14,7 +14,7 @@ keywords = ["gcf", "global", "container", "game", "format", "texture", "generic"
 dependencies = [
     "click",
     "pydantic",
-    "pygcf@https://github.com/global-container-format/pygcf/archive/refs/tags/v4.0.0.zip#sha256=979932766b103c7df4b98567f529493afb95f18648afd26f0f991ff0c274fb3d"
+    "pygcf@https://github.com/global-container-format/pygcf/archive/refs/tags/v5.0.1.zip#sha256=d5558cd419c8d46bdc958064cb97f963d1ea793866414c025906ec15033512ed"
 ]
 
 classifiers = [
