@@ -49,6 +49,13 @@ def gcf_description():
     return meta.create_sample_metadata_object()
 
 
+@pytest.fixture
+def gcf_description_no_flags(gcf_description):
+    del gcf_description["header"]["flags"]
+
+    return gcf_description
+
+
 @pytest.fixture(scope="session")
 def tmp_texture_file():
     """A temporary raw texture data file.

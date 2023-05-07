@@ -7,24 +7,7 @@ from gcf import texture
 
 from gcfpack import meta, serialization
 
-from .fixtures import (
-    empty_tmp_file,
-    gcf_description,
-    invalid_texture_flags,
-    raw_blob_resource,
-    raw_container_flag_values,
-    raw_supercompression_scheme_values,
-    raw_texture_resource,
-    tmp_blob_and_texture_metadata,
-    tmp_blob_description,
-    tmp_texture_description,
-    tmp_texture_description_invalid_layer_count,
-    tmp_texture_description_multiple_layers,
-    tmp_texture_description_multiple_layers_different_size,
-    tmp_texture_file,
-    tmp_texture_file2,
-    valid_texture_flags,
-)
+from .conftest import raw_blob_resource, raw_texture_resource
 
 
 def test_deserialize_container_flags(raw_container_flag_values):
@@ -74,6 +57,15 @@ def test_create_header(gcf_description):
 
     assert not ContainerFlags.UNPADDED in header["flags"]
     assert header["resource_count"] == 2
+
+
+def test_create_header_no_flags(gcf_description_no_flags):
+    raw_header = serialization.create_header(gcf_description_no_flags)
+
+    assert isinstance(raw_header, bytes)
+
+    # Must not raise because of missing flags field
+    deserialize_header(raw_header)
 
 
 def test_create_texture_resource(tmp_texture_description):

@@ -11,7 +11,9 @@ def cli():
 
 
 @cli.command(help="Create a new GCF file from description.")
-@click.option("-n", "--dry-run", help="Validate the description file without creating a GCF file.", default=False)
+@click.option(
+    "-n", "--dry-run", help="Validate the description file without creating a GCF file.", default=False, is_flag=True
+)
 @click.option("-i", "--description", help="JSON description file.", type=str)
 @click.option("-o", "--output", help="Output GCF file.", type=str)
 def create(dry_run: bool, description: str, output: str):

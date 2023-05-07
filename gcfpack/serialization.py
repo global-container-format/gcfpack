@@ -98,7 +98,7 @@ def create_header(desc: RawGcfDescription) -> bytes:
     """Create a GCF file header from its raw description."""
 
     version = gcfheader.make_magic_number()
-    flags = deserialize_container_flags(desc["header"]["flags"])
+    flags = deserialize_container_flags(desc["header"].get("flags", []))
     header: Header = {"magic": version, "flags": flags, "resource_count": len(desc["resources"])}
 
     return gcfheader.serialize_header(header)
