@@ -1,5 +1,4 @@
 from io import BytesIO
-from typing import cast
 
 import pytest
 from gcf import ContainerFlags, Format, ResourceType, blob, deserialize_header
