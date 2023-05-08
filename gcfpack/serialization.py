@@ -186,15 +186,16 @@ def create_texture_mip_level(tex_resource: RawTextureResource, level: RawTexture
     level_width, level_height, level_depth = gcfutil.compute_mip_level_size(
         level_index, base_width, base_height, base_depth
     )
-    slice_stride = level_width * level_height
-    layer_stride = slice_stride * level_depth
+    row_stride = level.get("row_stride", level_width)
+    slice_stride = level.get("slice_stride", row_stride * level_height)
+    layer_stride = level.get("layer_stride", slice_stride * level_depth)
 
     descriptor: gcftex.MipLevelDescriptor = {
         "compressed_size": len(data),
         "uncompressed_size": uncompressed_data_size,
-        "row_stride": level.get("row_stride", level_width),
-        "slice_stride": level.get("slice_stride", slice_stride),
-        "layer_stride": level.get("layer_stride", layer_stride),
+        "row_stride": row_stride,
+        "slice_stride": slice_stride,
+        "layer_stride": layer_stride,
     }
 
     return gcftex.serialize_mip_level_descriptor(descriptor) + data
